@@ -1,0 +1,206 @@
+# Kodi Media Center language file
+# Addon Name: YABoP
+# Addon id: plugin.video.yabop
+# Addon Provider: cache
+msgid ""
+msgstr ""
+
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: sk\n"
+
+msgctxt "#30000"
+msgid "Yet Another BOmbuj Plugin"
+msgstr ""
+
+msgctxt "#30003"
+msgid "Stream options"
+msgstr "Možnosti streamov"
+
+msgctxt "#30004"
+msgid "Stream provider not recognized, please report this:"
+msgstr "Poskytovateľ streamu nerozoznaný, nahláste nasledovné:"
+
+msgctxt "#30005"
+msgid "Search"
+msgstr "Vyhľadávanie"
+
+msgctxt "#30006"
+msgid "Sorry, no data available at current time"
+msgstr "Prepáčte, dáta nie sú aktuálne k dispozícii"
+
+msgctxt "#30007"
+msgid "Please enter title"
+msgstr "Prosím zadajte názov"
+
+msgctxt "#30008"
+msgid "Sorry, stream cannot be played at this time.."
+msgstr "Prepáčte, stream sa práve nedá prehrať.."
+
+msgctxt "#30009"
+msgid "Bombuj.eu not responding correctly."
+msgstr "Bombuj.eu neodpovedá v očakávanom formáte."
+
+msgctxt "#30010"
+msgid "Sorry, can't play this stream provider."
+msgstr "Prepáčte, tohto poskytovateľa neviem prehrať."
+
+msgctxt "#30100"
+msgid "Bombuj content type"
+msgstr "Typ obsahu na Bombuj"
+
+msgctxt "#30101"
+msgid "Movies"
+msgstr "Filmy"
+
+msgctxt "#30102"
+msgid "Series"
+msgstr "Seriály"
+
+msgctxt "#30103"
+msgid "Serie"
+msgstr "Séria"
+
+msgctxt "#30104"
+msgid "Episodes"
+msgstr "Epizódy"
+
+msgctxt "#30105"
+msgid "Episode"
+msgstr "Epizóda"
+
+msgctxt "#30106"
+msgid "Series"
+msgstr "Série"
+
+msgctxt "#30200"
+msgid "Categories"
+msgstr "Kategórie"
+
+msgctxt "#30201"
+msgid "All"
+msgstr "Všetko"
+
+msgctxt "#30202"
+msgid "Action"
+msgstr "Akčné"
+
+msgctxt "#30203"
+msgid "Adventure"
+msgstr "Dobrodružné"
+
+msgctxt "#30204"
+msgid "Animated / Cartoon"
+msgstr "Animované"
+
+msgctxt "#30205"
+msgid "Comedy"
+msgstr "Komédie"
+
+msgctxt "#30206"
+msgid "Crime"
+msgstr "Krimi"
+
+msgctxt "#30207"
+msgid "Drama"
+msgstr "Dráma"
+
+msgctxt "#30208"
+msgid "Family"
+msgstr "Rodinné"
+
+msgctxt "#30209"
+msgid "Horror"
+msgstr "Horor"
+
+msgctxt "#30210"
+msgid "Romantic"
+msgstr "Romantické"
+
+msgctxt "#30211"
+msgid "Sci-Fi"
+msgstr "Sci-Fi"
+
+msgctxt "#30212"
+msgid "Thriller"
+msgstr "Triler"
+
+msgctxt "#30213"
+msgid "Fantasy"
+msgstr "Fantasy"
+
+msgctxt "#30214"
+msgid "Biographical"
+msgstr "Životopisné"
+
+msgctxt "#30215"
+msgid "Mystery"
+msgstr "Mysteriózne"
+
+msgctxt "#30216"
+msgid "Document"
+msgstr "Dokumentárne"
+
+msgctxt "#30217"
+msgid "Sport"
+msgstr "Športové"
+
+msgctxt "#30218"
+msgid "War"
+msgstr "Vojnové"
+
+msgctxt "#30219"
+msgid "Historical"
+msgstr "Historické"
+
+msgctxt "#30220"
+msgid "Psychological"
+msgstr "Psychologické"
+
+msgctxt "#30221"
+msgid "Fairy tale"
+msgstr "Rozprávky"
+
+msgctxt "#30222"
+msgid "Catastrophical"
+msgstr "Katastrofické"
+
+msgctxt "#30223"
+msgid "Erotic"
+msgstr "Erotické"
+
+msgctxt "#30224"
+msgid "Musical"
+msgstr "Hudobné"
+
+msgctxt "#30225"
+msgid "Western"
+msgstr "Western"
+
+msgctxt "#30300"
+msgid "Listings"
+msgstr "Zoznamy"
+
+msgctxt "#30301"
+msgid "Newest"
+msgstr "Najnovšie"
+
+msgctxt "#30302"
+msgid "Popular"
+msgstr "Populárne"
+
+msgctxt "#30303"
+msgid "Movies by year"
+msgstr "Filmy podľa roku"
+
+msgctxt "#30304"
+msgid "Best rated"
+msgstr "Najlepšie hodnotené"
+
+msgctxt "#30305"
+msgid "Today TOP"
+msgstr "Dnešné TOP"
+
+msgctxt "#30306"
+msgid "Overall TOP"
+msgstr "Celkové TOP"
+
