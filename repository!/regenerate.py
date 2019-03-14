@@ -5,7 +5,8 @@ def delete_all_files(folder,skip):
 	for the_file in os.listdir(folder):
 		file_path = os.path.join(folder, the_file)
 		#print(file_path)
-		if not file_path in skip:
+		if file_path in skip:
+			print(file_path)
 			try:
 				if os.path.isfile(file_path):
 					print('unlinking '+file_path)
@@ -16,8 +17,6 @@ def delete_all_files(folder,skip):
 					os.rmdir(file_path)
 			except Exception as e:
 				print(e)
-		else:
-			print('skipping '+file_path)
 
 SKIP = [os.path.join('.', 'create_repository.py'),
 		os.path.join('.', 'regenerate.py')]
