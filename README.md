@@ -35,10 +35,10 @@ Chyba bude zrejme vo ffmpeg, môžte googliť. Hádam to niekedy fixnú a zmeny 
 Pribalené sú tri jazyky - en, sk a cz podľa slováka :-)
 
 ## Závislosti
-Plugin vyžaduje [script.module.resolveurl](https://github.com/jsergio123/script.module.resolveurl), ktorý si môžte stiahnuť a manuálne nainštalovať ZIP z linkovaného github repozitáru - stlačte zelené tlačitko "Clone or download" a následne "Download ZIP".
+Plugin vyžaduje [script.module.resolveurl](https://github.com/jsergio123/script.module.resolveurl), ktorý si môžte stiahnuť a manuálne nainštalovať ZIP z linkovaného github repozitáru - stlačte zelené tlačidlo "Clone or download" a následne "Download ZIP".
 
-Odporáčal by som ale inštaláciu kodi repozitáru [repository.tva.common](https://github.com/tvaddonsco/tva-resolvers-repo/tree/master/zips/repository.tva.common), kde je tento plugin publikovaný a teda aj bude aktualizovaný.
-ZIP stiahnete kliknutím na detail a následne tlačitkom Download. Resolveurl sa potom nainštaluje samo pri inštalácii tohto pluginu.
+Odporúčal by som ale inštaláciu kodi repozitáru [repository.tva.common](https://github.com/tvaddonsco/tva-resolvers-repo/tree/master/zips/repository.tva.common), kde je tento plugin publikovaný a teda aj bude aktualizovaný.
+ZIP stiahnete kliknutím na detail a následne tlačidlom Download. Resolveurl sa potom nainštaluje samo pri inštalácii tohto pluginu.
 
 ## Inštalácia a aktualizácia
 Aktuálnu verziu nájdete vždy v časti [repository](https://github.com/cache-sk/YABoP/tree/master/repository/plugin.video.yabop) a stiahnete rovnako, ako spomínaný kodi repozitár vyššie.
@@ -54,4 +54,4 @@ Plugin som kódil na Windows 10 s Kodi verzie 18.1 a otestoval aj s rovnakou ver
 ## Epilóg
 Plugin vznikol ako moje programátorské cvičenie, Kodi samotné som prvý krát nainštaloval 2 týždne predtým a python som dovtedy tiež nevidel.
 Z toho dôvodu nedokážem zaručiť, že bude fungovať navždy.  
-Pri práci mi pomohli [plugin.video.example](https://github.com/romanvm/plugin.video.example), [plugin.video.bombuj.filmyserialy](https://github.com/KubiszDeny/plugin.video.bombuj.filmyserialy), [plugin.video.sl](https://github.com/Sorien/plugin.video.sl) a samozrejme aj [pán Google](https://www.google.sk/) ;-)
+Pri práci mi pomohli [plugin.video.example](https://github.com/romanvm/plugin.video.example), [plugin.video.bombuj.filmyserialy](https://github.com/KubiszDeny/plugin.video.bombuj.filmyserialy), [plugin.video.sl](https://github.com/Sorien/plugin.video.sl) a samozrejme aj [ujo Google](https://www.google.sk/) ;-)
