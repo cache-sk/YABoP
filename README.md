@@ -1,5 +1,8 @@
-# YABoP Kodi Video Plugin
-![YABoP](plugin.video.yabop/icon.png)
+# Yet Another Bombuj Plugin
+
+![Yet Another Bombuj Plugin](plugin.video.yabop/icon.png)
+
+## Kodi Video Plugin / YABoP
 
 Plugin prehrá obsah z Bombuj.eu
 Používa na to android api, ktoré používa aj oficiálna [android aplikácia](https://play.google.com/store/apps/details?id=com.tosi.bombujmanual).
