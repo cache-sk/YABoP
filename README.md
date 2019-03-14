@@ -8,14 +8,15 @@ Plugin prehrá obsah z Bombuj.eu.
 Používa na to android api, ktoré používa aj oficiálna [android aplikácia](https://play.google.com/store/apps/details?id=com.tosi.bombujmanual).  
 (Ľudia z bombuj, keď toto čítate, nemajte mi to za zlé a neblokujte to, mohli ste takýto plugin spraviť aj vy kedykoľvek..)
 
-Kategórie sú presne podľa bombuj. Názvy filmov a seriálov sú trochu jazykovo pomixované, ale tak to vracia api.
+Kategórie sú presne podľa bombuj. Názvy filmov a seriálov sú trochu jazykovo pomixované, ale tak to vracia api.  
 Je tam aj jednoduché vyhľadávanie (ako posledná kategória v sekcii), výsledky sú rovnako podľa api.
 
 Plugin aktuálne rozoznáva tieto share stránky:
 - openload.io - prehrá a aj sa pokúsi stiahnuť a použiť titulky priamo z openload
 - streamango.com - prehrá
 - exashare.com - už neexistuje
-- netu.tv - nevie prehrať (aj samotné netu nezmyselne presmeruje)  
+- netu.tv - nevie prehrať (aj samotné netu nezmyselne presmeruje)
+
 Na ostatné vypíše chybovú hlášku a údaje z nej môžte nahlásiť v diskusii.
 
 Pri openload.io treba každé 4 hodiny potvrdzovať párovanie na [https://olpair.com/](https://olpair.com/) z tej istej siete, z ktorej sa snaží prehrávať.
@@ -34,22 +35,23 @@ Chyba bude zrejme vo ffmpeg, môžte googliť. Hádam to niekedy fixnú a zmeny 
 Pribalené sú tri jazyky - en, sk a cz podľa slováka :-)
 
 ## Závislosti
-Plugin vyžaduje [script.module.resolveurl](https://github.com/jsergio123/script.module.resolveurl), ktorý si môžte stiahnuť a manuálne nainštalovať ZIP z linkovaného github repozitáru - stlačte zeleného tlačitka "Clone or download" a následne "Download ZIP".
+Plugin vyžaduje [script.module.resolveurl](https://github.com/jsergio123/script.module.resolveurl), ktorý si môžte stiahnuť a manuálne nainštalovať ZIP z linkovaného github repozitáru - stlačte zelené tlačitko "Clone or download" a následne "Download ZIP".
 
-Odporáčal by som ale inštaláciu kodi repozitáru [repository.tva.common](https://github.com/tvaddonsco/tva-resolvers-repo/tree/master/zips/repository.tva.common), kde je tento plugin publikovaný a teda aj bude aktualizovaný. ZIP stiahnete kliknutím na detail a následne tlačitkom Download.
-Resolveurl sa potom nainštaluje samo.
+Odporáčal by som ale inštaláciu kodi repozitáru [repository.tva.common](https://github.com/tvaddonsco/tva-resolvers-repo/tree/master/zips/repository.tva.common), kde je tento plugin publikovaný a teda aj bude aktualizovaný.
+ZIP stiahnete kliknutím na detail a následne tlačitkom Download. Resolveurl sa potom nainštaluje samo pri inštalácii tohto pluginu.
 
 ## Inštalácia a aktualizácia
-Aktuálnu verziu nájdete vždy v časti [repository](https://github.com/cache-sk/YABoP/tree/master/repository/plugin.video.yabop) a stiahnete rovnako, ako spomínaný repozitár vyššie.
+Aktuálnu verziu nájdete vždy v časti [repository](https://github.com/cache-sk/YABoP/tree/master/repository/plugin.video.yabop) a stiahnete rovnako, ako spomínaný kodi repozitár vyššie.
 Plugin následne slúži aj sám sebe ako repozitár, takže vždy keď sem vypublikujem novú verziu, tak sa aktualizuje aj u Vás.
 
 Predpokladám, že inštaláciu zo ZIP súboru a povolenie takejto inštalácie zvládnete sami.
 
-Plugin som kódil na Windows 10 s Kodi verzie 18.1 a otestoval aj s rovnakou verziou na Android TV a Android Boxe z činy - obe nainštalované z Google Play.
+Plugin som kódil na Windows 10 s Kodi verzie 18.1 a otestoval aj s rovnakou verziou na Android TV a Android Boxe z číny - obe nainštalované z Google Play. Iné zariadenia bohužiaľ nemám.
 
 ## Diskusia
 [https://www.xbmc-kodi.cz/not-yet](https://www.xbmc-kodi.cz/not-yet)
 
 ## Epilóg
-Plugin vznikol ako moje programátorské cvičenie, Kodi samotné sim prvý krát nainštaloval 2 týždne predtým a python som dovtedy tiež nevidel.  
-Z toho dôvodu nedokážem zaručiť, že bude fungovať navždy.
+Plugin vznikol ako moje programátorské cvičenie, Kodi samotné som prvý krát nainštaloval 2 týždne predtým a python som dovtedy tiež nevidel.
+Z toho dôvodu nedokážem zaručiť, že bude fungovať navždy.  
+Pri práci mi pomohli [plugin.video.example](https://github.com/romanvm/plugin.video.example), [plugin.video.bombuj.filmyserialy](https://github.com/KubiszDeny/plugin.video.bombuj.filmyserialy), [plugin.video.sl](https://github.com/Sorien/plugin.video.sl) a samozrejme aj [pán Google](https://www.google.sk/) ;-)
