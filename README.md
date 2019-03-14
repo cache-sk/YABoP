@@ -49,7 +49,7 @@ Predpokladám, že inštaláciu zo ZIP súboru a povolenie takejto inštalácie 
 Plugin som kódil na Windows 10 s Kodi verzie 18.1 a otestoval aj s rovnakou verziou na Android TV a Android Boxe z číny - obe nainštalované z Google Play. Iné zariadenia bohužiaľ nemám.
 
 ## Diskusia
-[https://www.xbmc-kodi.cz/not-yet](https://www.xbmc-kodi.cz/not-yet)
+[https://www.xbmc-kodi.cz/prispevek-yet-another-bombuj-plugin](https://www.xbmc-kodi.cz/prispevek-yet-another-bombuj-plugin)
 
 ## Epilóg
 Plugin vznikol ako moje programátorské cvičenie, Kodi samotné som prvý krát nainštaloval 2 týždne predtým a python som dovtedy tiež nevidel.
