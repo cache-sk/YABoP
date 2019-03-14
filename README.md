@@ -1,5 +1,5 @@
 # YABoP Kodi Video Plugin
-![YABoP](icon.png)
+![YABoP](plugin.video.yabop/icon.png)
 
 Plugin prehrá obsah z Bombuj.eu
 
@@ -7,5 +7,5 @@ Plugin prehrá obsah z Bombuj.eu
 [script.module.resolveurl](https://github.com/jsergio123/script.module.resolveurl)
 
 ## Diskusia
-[www.xbmc-kodi.cz](https://www.xbmc-kodi.cz/)
+[https://www.xbmc-kodi.cz/not-yet](https://www.xbmc-kodi.cz/not-yet)
 
