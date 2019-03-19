@@ -31,7 +31,6 @@ _profile = xbmc.translatePath( _addon.getAddonInfo('profile')).decode("utf-8")
 _per_page = int(xbmcplugin.getSetting(_handle, 'per_page'))
 _try_olpair = xbmcplugin.getSetting(_handle, 'try_olpair') == 'true'
 
-
 CACHED_DATA_MAX_AGE = 14400 #4h; 43200 #12h
 
 BOMBUJ_API = 'http://www.bombuj.eu/android_api/'
