@@ -19,7 +19,7 @@ import io
 import os
 import traceback
 import re
-#import webbrowser
+import webbrowser
 
 _url = sys.argv[0]
 _handle = int(sys.argv[1])
@@ -27,6 +27,10 @@ _handle = int(sys.argv[1])
 _addon = xbmcaddon.Addon()
 _session = requests.Session()
 _profile = xbmc.translatePath( _addon.getAddonInfo('profile')).decode("utf-8")
+
+_per_page = int(xbmcplugin.getSetting(_handle, 'per_page'))
+_try_olpair = xbmcplugin.getSetting(_handle, 'try_olpair') == 'true'
+
 
 CACHED_DATA_MAX_AGE = 14400 #4h; 43200 #12h
 
@@ -39,31 +43,31 @@ CTYPES = [{'type':'movies','msg':_addon.getLocalizedString(30101)},
 	{'type':'series','msg':_addon.getLocalizedString(30102)}]
 
 CATEGORIES = [
-	{'cat':'','msg':_addon.getLocalizedString(30201)},
-	{'cat':'Akční','msg':_addon.getLocalizedString(30202)},
-	{'cat':'Dobrodružný','msg':_addon.getLocalizedString(30203)},
-	{'cat':'Animovaný','msg':_addon.getLocalizedString(30204)},
-	{'cat':'Komedie','msg':_addon.getLocalizedString(30205)},
-	{'cat':'Krimi','msg':_addon.getLocalizedString(30206)},
-	{'cat':'Dráma','msg':_addon.getLocalizedString(30207)},
-	{'cat':'Rodinný','msg':_addon.getLocalizedString(30208)},
-	{'cat':'Horor','msg':_addon.getLocalizedString(30209)},
-	{'cat':'Romantický','msg':_addon.getLocalizedString(30210)},
-	{'cat':'Sci-Fi','msg':_addon.getLocalizedString(30211)},
-	{'cat':'Thriller','msg':_addon.getLocalizedString(30212)},
-	{'cat':'Fantasy','msg':_addon.getLocalizedString(30213)},
-	{'cat':'Životopisný','msg':_addon.getLocalizedString(30214)},
-	{'cat':'Mysteriózní','msg':_addon.getLocalizedString(30215)},
-	{'cat':'Dokumentární','msg':_addon.getLocalizedString(30216)},
-	{'cat':'Sportovní','msg':_addon.getLocalizedString(30217)},
-	{'cat':'Válečný','msg':_addon.getLocalizedString(30218)},
-	{'cat':'Historický','msg':_addon.getLocalizedString(30219)},
-	{'cat':'Psychologický','msg':_addon.getLocalizedString(30220)},
-	{'cat':'Pohádka','msg':_addon.getLocalizedString(30221)},
-	{'cat':'Katastrofický','msg':_addon.getLocalizedString(30222)},
-	{'cat':'Erotický','msg':_addon.getLocalizedString(30223)},
-	{'cat':'Hudební','msg':_addon.getLocalizedString(30224)},
-	{'cat':'Western','msg':_addon.getLocalizedString(30225)}]
+	{'cat':'','msg':_addon.getLocalizedString(30201), 'fn':'vsechno'},
+	{'cat':'Akční','msg':_addon.getLocalizedString(30202), 'fn':'akcni'},
+	{'cat':'Dobrodružný','msg':_addon.getLocalizedString(30203), 'fn':'dobrodruzny'},
+	{'cat':'Animovaný','msg':_addon.getLocalizedString(30204), 'fn':'animovany'},
+	{'cat':'Komedie','msg':_addon.getLocalizedString(30205), 'fn':'komedie'},
+	{'cat':'Krimi','msg':_addon.getLocalizedString(30206), 'fn':'krimi'},
+	{'cat':'Dráma','msg':_addon.getLocalizedString(30207), 'fn':'drama'},
+	{'cat':'Rodinný','msg':_addon.getLocalizedString(30208), 'fn':'rodinny'},
+	{'cat':'Horor','msg':_addon.getLocalizedString(30209), 'fn':'horor'},
+	{'cat':'Romantický','msg':_addon.getLocalizedString(30210), 'fn':'romanticky'},
+	{'cat':'Sci-Fi','msg':_addon.getLocalizedString(30211), 'fn':'scifi'},
+	{'cat':'Thriller','msg':_addon.getLocalizedString(30212), 'fn':'thriller'},
+	{'cat':'Fantasy','msg':_addon.getLocalizedString(30213), 'fn':'fantasy'},
+	{'cat':'Životopisný','msg':_addon.getLocalizedString(30214), 'fn':'zivotopisny'},
+	{'cat':'Mysteriózní','msg':_addon.getLocalizedString(30215), 'fn':'mysteriozni'},
+	{'cat':'Dokumentární','msg':_addon.getLocalizedString(30216), 'fn':'dokumentarni'},
+	{'cat':'Sportovní','msg':_addon.getLocalizedString(30217), 'fn':'sportovni'},
+	{'cat':'Válečný','msg':_addon.getLocalizedString(30218), 'fn':'valecny'},
+	{'cat':'Historický','msg':_addon.getLocalizedString(30219), 'fn':'historicky'},
+	{'cat':'Psychologický','msg':_addon.getLocalizedString(30220), 'fn':'psychologicky'},
+	{'cat':'Pohádka','msg':_addon.getLocalizedString(30221), 'fn':'pohadka'},
+	{'cat':'Katastrofický','msg':_addon.getLocalizedString(30222), 'fn':'katastroficky'},
+	{'cat':'Erotický','msg':_addon.getLocalizedString(30223), 'fn':'eroticky'},
+	{'cat':'Hudební','msg':_addon.getLocalizedString(30224), 'fn':'hudebni'},
+	{'cat':'Western','msg':_addon.getLocalizedString(30225), 'fn':'western'}]
 
 LISTS = [
 	{'list':'najnovsie','msg':_addon.getLocalizedString(30301),'series':True},
@@ -259,9 +263,11 @@ def list_lists(ctype,category):
 	
 def list_movies(category,listt):
 	catName = category
+	catFN = ''
 	for cat in CATEGORIES:
 		if cat['cat'] == category:
 			catName = cat['msg']
+			catFN = cat['fn']
 			break
 	lstName = listt
 	for lst in LISTS:
@@ -274,8 +280,7 @@ def list_movies(category,listt):
 	movies = []
 	
 	try:
-		data = _session.get(BOMBUJ_API + 'filmy/get_items_as_json.php?type=' + listt + '&zaner=' + category + '&sort=aj_s_titulkami', headers=HEADERS) #aj_s_titulkami/len_dabovane/len_s_titulkami
-		loaded = json.loads(data.text, "utf-8")
+		loaded = get_cached_or_load('list_movies_' + listt + '_' + catFN, BOMBUJ_API + 'filmy/get_items_as_json.php?type=' + listt + '&zaner=' + category + '&sort=aj_s_titulkami') #aj_s_titulkami/len_dabovane/len_s_titulkami
 		movies = loaded[listt]
 	except Exception as e:
 		xbmc.log(str(e),level=xbmc.LOGNOTICE)
@@ -351,9 +356,11 @@ def list_movie_streams(url,iid,movie):
 
 def list_series(category,listt):
 	catName = category
+	catFN = ''
 	for cat in CATEGORIES:
 		if cat['cat'] == category:
 			catName = cat['msg']
+			catFN = cat['fn']
 			break
 	lstName = listt
 	for lst in LISTS:
@@ -366,8 +373,7 @@ def list_series(category,listt):
 	series = []
 	
 	try:
-		data = _session.get(BOMBUJ_API + 'serialy/get_items_as_json.php?type=' + listt + '&zaner=' + category, headers=HEADERS)
-		loaded = json.loads(data.text, "utf-8")
+		loaded = get_cached_or_load('list_series_' + listt + '_' + catFN, BOMBUJ_API + 'serialy/get_items_as_json.php?type=' + listt + '&zaner=' + category)
 		series = loaded[listt]
 	except Exception as e:
 		xbmc.log(str(e),level=xbmc.LOGNOTICE)
@@ -490,14 +496,21 @@ def play_stream(code,vh,url,iid):
 			xbmc.log(str(e),level=xbmc.LOGNOTICE)
 			traceback.print_exc()
 
-		# olpair chceck
-		olpair_data = _session.get("https://olpair.com/")
-		olpair_search = re.search(".*<script>.*function reqDone.*\}else\{[\s+]*display(\w+)\(\);.*\$\.ajax.*</script>.*", olpair_data.text, re.DOTALL)
-		olpair_state = olpair_search.group(1)
-		if 'Paired' == olpair_state:
-			pass #everything should be ok
-		elif 'Form' == olpair_state:
-			webbrowser.open('https://olpair.com', new=1, autoraise=True)
+		# olpair chceck - development in progress
+		if _try_olpair:
+			olpair_data = _session.get("https://olpair.com/")
+			olpair_search = re.search(".*<script>.*function reqDone.*\}else\{[\s+]*display(\w+)\(\);.*\$\.ajax.*</script>.*", olpair_data.text, re.DOTALL)
+			olpair_state = olpair_search.group(1)
+			if 'Paired' == olpair_state:
+				pass #everything should be ok
+			elif 'Form' == olpair_state:
+				if (webbrowser.open('https://olpair.com', new=1, autoraise=True)):
+					pass
+				else:
+					pass
+					# other platforms
+					# xbmc.executebuiltin('RunAddon(browser.chrome, http://olpair.com/)') # pridano spusteni browseru by Client on LibreELEC
+					# https://forum.kodi.tv/showthread.php?tid=235733
 	elif vh == 'streamango.com':
 		path = 'https://streamango.com/embed/' + code
 	elif vh == 'exashare.com' or vh == 'netu.tv':

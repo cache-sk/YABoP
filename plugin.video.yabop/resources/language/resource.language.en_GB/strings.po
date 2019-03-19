@@ -44,6 +44,18 @@ msgctxt "#30010"
 msgid "Sorry, can't play this stream provider."
 msgstr ""
 
+msgctxt "#30020"
+msgid "Options"
+msgstr ""
+
+msgctxt "#30021"
+msgid "Movies / series per page"
+msgstr ""
+
+msgctxt "#30022"
+msgid "Try to detect and open olpair.com"
+msgstr ""
+
 msgctxt "#30100"
 msgid "Bombuj content type"
 msgstr ""

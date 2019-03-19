@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<category label="30020">
+		<setting label="30021" type="number" id="per_page" default="100"/>
+		<setting label="30022" type="bool" id="try_olpair" default="true"/>
+	</category>
+</settings>

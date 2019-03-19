@@ -44,6 +44,18 @@ msgctxt "#30010"
 msgid "Sorry, can't play this stream provider."
 msgstr "Prepáčte, tohto poskytovateľa neviem prehrať."
 
+msgctxt "#30020"
+msgid "Options"
+msgstr "Možnosti"
+
+msgctxt "#30021"
+msgid "Movies / series per page"
+msgstr "Filmov / seriálov na stránku"
+
+msgctxt "#30022"
+msgid "Try to detect and open olpair.com"
+msgstr "Pokúsiť sa rozoznať a otvoriť olpair.com"
+
 msgctxt "#30100"
 msgid "Bombuj content type"
 msgstr "Typ obsahu na Bombuj"
