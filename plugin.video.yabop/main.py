@@ -28,7 +28,7 @@ _addon = xbmcaddon.Addon()
 _session = requests.Session()
 _profile = xbmc.translatePath( _addon.getAddonInfo('profile')).decode("utf-8")
 
-SEARCH_DATA_MAX_AGE = 43200 #12h
+CACHED_DATA_MAX_AGE = 14400 #4h; 43200 #12h
 
 BOMBUJ_API = 'http://www.bombuj.eu/android_api/'
 HEADERS={'User-Agent': 'android', 'Referer': BOMBUJ_API}
@@ -79,27 +79,36 @@ def get_url(**kwargs):
 def check_profile():
 	if not os.path.exists(_profile):
 		os.makedirs(_profile)
+		
+	# old cache cleaning, to be removed in future releases
+	if not os.path.isfile(_profile + 'old_removed'):
+		if os.path.isfile(_profile + 'movies_data'): os.unlink(_profile + 'movies_data')
+		if os.path.isfile(_profile + 'movies_last_data'): os.unlink(_profile + 'movies_last_data')
+		if os.path.isfile(_profile + 'series_data'): os.unlink(_profile + 'series_data')
+		if os.path.isfile(_profile + 'series_last_data'): os.unlink(_profile + 'series_last_data')
+		with io.open(_profile + "old_removed", 'w', encoding='utf8') as file:
+			file.close()
 
-def get_search_data(ctype, isSeries):
+def get_cached_or_load(name, url):
 	check_profile()
 	data = []
 	last_data = ''
 	already_tried = False
 	current = time.time()
 	try:
-		with io.open(_profile + ctype+"_last_data", 'r', encoding='utf8') as file:
+		with io.open(_profile + name + "_last_data", 'r', encoding='utf8') as file:
 			last_data = file.read()
 			file.close()
 	except Exception as e:
-		xbmc.log('Can\'t load ' + ctype + '_last_data\n'+str(e),level=xbmc.LOGNOTICE)
+		xbmc.log('Can\'t load ' + name + '_last_data\n'+str(e),level=xbmc.LOGNOTICE)
 		traceback.print_exc()
 	
 	if last_data != '': # there are some stored data
 		try:
 			last = float(last_data)
 			age = current - last
-			if age < SEARCH_DATA_MAX_AGE: #fresh data - load it
-				with io.open(_profile + ctype+"_data", 'r', encoding='utf8') as file:
+			if age < CACHED_DATA_MAX_AGE: #fresh data - load it
+				with io.open(_profile + name + "_data", 'r', encoding='utf8') as file:
 					fdata = file.read()
 					file.close()
 					data = json.loads(fdata, "utf-8")
@@ -111,20 +120,12 @@ def get_search_data(ctype, isSeries):
 	if not data: #old data was not fresh, download it
 		try:
 			current = time.time()
-			url = BOMBUJ_API + 'searchjson.php'
-			if isSeries:
-				url = BOMBUJ_API + 'searchserialyjson.php'
 			wdata = _session.get(url, headers=HEADERS)
-			loaded = json.loads(wdata.text, "utf-8")
-			data = []
-			if isSeries:
-				data = loaded['results_serialy']
-			else:
-				data = loaded['results']
-			with io.open(_profile + ctype+"_data", 'w', encoding='utf8') as file:
+			data = json.loads(wdata.text, "utf-8")
+			with io.open(_profile + name + "_data", 'w', encoding='utf8') as file:
 				file.write(json.dumps(data).decode('utf8'))
 				file.close()
-			with io.open(_profile + ctype+"_last_data", 'w', encoding='utf8') as file:
+			with io.open(_profile + name + "_last_data", 'w', encoding='utf8') as file:
 				file.write(str(current).decode('utf-8'))
 				file.close()
 		except Exception as e:
@@ -133,15 +134,31 @@ def get_search_data(ctype, isSeries):
 	
 	if not data and last_data != '' and not already_tried: # there are some not fresh stored data, but couldn't load new ones
 		try:
-			with io.open(_profile + ctype+"_data", 'r', encoding='utf8') as file:
+			with io.open(_profile + name + "_data", 'r', encoding='utf8') as file:
 				fdata = file.read()
 				file.close()
 				data = json.loads(fdata, "utf-8")
 		except Exception as e:
 			xbmc.log('Old data is there (' + last_data + '), but can\'t be loaded..\n'+str(e),level=xbmc.LOGNOTICE)
 			traceback.print_exc()
-	
 	return data
+
+def get_search_data(ctype, isSeries):
+	search_data = []
+	url = BOMBUJ_API + 'searchjson.php'
+	if isSeries:
+		url = BOMBUJ_API + 'searchserialyjson.php'
+	data = get_cached_or_load('search_' + ctype, url)
+	if data:
+		try:
+			if isSeries:
+				search_data = data['results_serialy']
+			else:
+				search_data = data['results']
+		except Exception as e:
+			xbmc.log('Can\'t process data from bombuj\n'+str(e),level=xbmc.LOGNOTICE)
+			traceback.print_exc()
+	return search_data
 
 def list_types():
 	xbmcplugin.setPluginCategory(_handle, '')
@@ -149,8 +166,7 @@ def list_types():
 	for ctype in CTYPES:
 		list_item = xbmcgui.ListItem(label=ctype['msg'])
 		list_item.setInfo('video', {'title': ctype['msg'],
-									'genre': ctype['msg'],
-									'mediatype': 'video'})
+									'genre': ctype['msg']})
 		link = get_url(action='categories', ctype=ctype['type'])
 		is_folder = True
 		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
@@ -163,15 +179,13 @@ def list_categories(ctype):
 	for category in CATEGORIES:
 		list_item = xbmcgui.ListItem(label=category['msg'])
 		list_item.setInfo('video', {'title': category['msg'],
-									'genre': category['msg'],
-									'mediatype': 'video'})
+									'genre': category['msg']})
 		link = get_url(action='lists', category=category['cat'], ctype=ctype)
 		is_folder = True
 		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
 	list_item = xbmcgui.ListItem(label=_addon.getLocalizedString(30005))
 	list_item.setInfo('video', {'title': _addon.getLocalizedString(30005),
-								'genre': _addon.getLocalizedString(30005),
-								'mediatype': 'video'})
+								'genre': _addon.getLocalizedString(30005)})
 	link = get_url(action='search', ctype=ctype)
 	is_folder = True
 	xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
@@ -237,8 +251,7 @@ def list_lists(ctype,category):
 		if (ctype == 'series' and listt['series'] == True) or ctype == 'movies':
 			list_item = xbmcgui.ListItem(label=listt['msg'])
 			list_item.setInfo('video', {'title': listt['msg'],
-										'genre': listt['msg'],
-										'mediatype': 'video'})
+										'genre': listt['msg']})
 			link = get_url(action=ctype, category=category, listt=listt['list'])
 			is_folder = True
 			xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
@@ -459,10 +472,6 @@ def list_series_episodes(serie,url,iid):
 		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
 	xbmcplugin.endOfDirectory(_handle)
 
-
-#import webbrowser
-#webbrowser.open('https://olpair.com', new=1, autoraise=True)
-
 def play_stream(code,vh,url,iid):
 	path = ''
 	subtitles = []
@@ -480,9 +489,15 @@ def play_stream(code,vh,url,iid):
 		except Exception as e:
 			xbmc.log(str(e),level=xbmc.LOGNOTICE)
 			traceback.print_exc()
-			
-		# TODO - open olpair? fork resolveurl?
-		# webbrowser.open('https://olpair.com', new=1, autoraise=True)
+
+		# olpair chceck
+		olpair_data = _session.get("https://olpair.com/")
+		olpair_search = re.search(".*<script>.*function reqDone.*\}else\{[\s+]*display(\w+)\(\);.*\$\.ajax.*</script>.*", olpair_data.text, re.DOTALL)
+		olpair_state = olpair_search.group(1)
+		if 'Paired' == olpair_state:
+			pass #everything should be ok
+		elif 'Form' == olpair_state:
+			webbrowser.open('https://olpair.com', new=1, autoraise=True)
 	elif vh == 'streamango.com':
 		path = 'https://streamango.com/embed/' + code
 	elif vh == 'exashare.com' or vh == 'netu.tv':
