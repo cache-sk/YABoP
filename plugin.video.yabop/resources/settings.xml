@@ -2,6 +2,6 @@
 <settings>
 	<category label="30020">
 		<setting label="30021" type="number" id="per_page" default="100" enable="false"/>
-		<setting label="30022" type="bool" id="try_olpair" default="true"/>
+		<setting label="30022" type="bool" id="try_olpair" default="false"/>
 	</category>
 </settings>

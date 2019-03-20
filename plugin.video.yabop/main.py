@@ -497,19 +497,13 @@ def play_stream(code,vh,url,iid):
 
 		# olpair chceck - development in progress
 		if _try_olpair:
-			olpair_data = _session.get("https://olpair.com/")
+			olpair_data = _session.get('https://olpair.com/')
 			olpair_search = re.search(".*<script>.*function reqDone.*\}else\{[\s+]*display(\w+)\(\);.*\$\.ajax.*</script>.*", olpair_data.text, re.DOTALL)
 			olpair_state = olpair_search.group(1)
 			if 'Paired' == olpair_state:
 				pass #everything should be ok
 			elif 'Form' == olpair_state:
-				if (webbrowser.open('https://olpair.com', new=1, autoraise=True)):
-					pass
-				else:
-					pass
-					# other platforms
-					# xbmc.executebuiltin('RunAddon(browser.chrome, http://olpair.com/)') # pridano spusteni browseru by Client on LibreELEC
-					# https://forum.kodi.tv/showthread.php?tid=235733
+				open_browser('https://olpair.com/')
 	elif vh == 'streamango.com':
 		path = 'https://streamango.com/embed/' + code
 	elif vh == 'exashare.com' or vh == 'netu.tv':
@@ -532,6 +526,49 @@ def play_stream(code,vh,url,iid):
 		xbmc.log(str(e),level=xbmc.LOGNOTICE)
 		traceback.print_exc()
 		xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30008), str(e))
+		
+def open_browser(url):
+	if (webbrowser.open(url, new=1, autoraise=True)):
+		pass
+	else:
+		osWin = xbmc.getCondVisibility('System.Platform.Windows')
+		osWinUWP = xbmc.getCondVisibility('System.Platform.UWP')
+		osOsx = xbmc.getCondVisibility('System.Platform.OSX')
+		osIos = xbmc.getCondVisibility('System.Platform.IOS')
+		osDarwin = xbmc.getCondVisibility('System.Platform.Darwin')
+		osLinux = xbmc.getCondVisibility('System.Platform.Linux')
+		osRpi = xbmc.getCondVisibility('System.Platform.Linux.RaspberryPi')
+		osAndroid = xbmc.getCondVisibility('System.Platform.Android')
+		
+		if osOsx or osIos or osDarwin:
+			try:
+				xbmc.executebuiltin('System.Exec(open ' + url + ')')
+			except:
+				pass
+		elif osWin or osWinUWP:
+			try:
+				xbmc.executebuiltin('System.Exec(cmd.exe /c start ' + url + ')')
+			except:
+				pass
+		elif osLinux and not osAndroid:
+			try:
+				xbmc.executebuiltin('System.Exec(xdg-open ' + url + ')')
+			except:
+				try:
+					xbmc.executebuiltin('RunAddon(browser.chrome, ' + url + ')')
+				except:
+					pass
+		elif osAndroid:
+			try:
+				xbmc.executebuiltin('StartAndroidActivity(com.android.browser,android.intent.action.VIEW,,' + url + ')')
+			except:
+				try:
+					xbmc.executebuiltin('StartAndroidActivity(com.android.chrome,,,' + url + ')')
+				except:
+					try:
+						xbmc.executebuiltin('StartAndroidActivity(org.mozilla.firefox,android.intent.action.VIEW,,' + url + ')')
+					except:
+						pass
 
 def router(paramstring):
 	params = dict(parse_qsl(paramstring))
@@ -571,7 +608,6 @@ def router(paramstring):
 			raise ValueError('Invalid paramstring: {0}!'.format(paramstring))
 	else:
 		list_types()
-
 
 if __name__ == '__main__':
 	router(sys.argv[2][1:])
