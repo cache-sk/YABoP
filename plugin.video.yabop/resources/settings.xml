@@ -3,7 +3,7 @@
 	<category label="30020">
 		<setting label="30024" type="bool" id="cacheing" default="true"/>
 		<setting label="30023" type="bool" id="pageing" default="false"/>
-		<setting label="30021" type="number" id="per_page" default="100" enable="eq(-1,true)"/>
+		<setting label="30021" type="number" id="per_page" default="20" enable="eq(-1,true)"/>
 		<setting label="30022" type="bool" id="try_olpair" default="false"/>
 	</category>
 </settings>

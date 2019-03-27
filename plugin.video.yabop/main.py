@@ -132,12 +132,13 @@ def get_cached_or_load(name, url):
 			current = time.time()
 			wdata = _session.get(url, headers=HEADERS)
 			data = json.loads(wdata.text, "utf-8")
-			with io.open(_profile + name + "_data", 'w', encoding='utf8') as file:
-				file.write(json.dumps(data).decode('utf8'))
-				file.close()
-			with io.open(_profile + name + "_last_data", 'w', encoding='utf8') as file:
-				file.write(str(current).decode('utf-8'))
-				file.close()
+			if _cacheing:
+				with io.open(_profile + name + "_data", 'w', encoding='utf8') as file:
+					file.write(json.dumps(data).decode('utf8'))
+					file.close()
+				with io.open(_profile + name + "_last_data", 'w', encoding='utf8') as file:
+					file.write(str(current).decode('utf-8'))
+					file.close()
 		except Exception as e:
 			xbmc.log('Can\'t load or store data from bombuj\n'+str(e),level=xbmc.LOGNOTICE)
 			traceback.print_exc()
@@ -375,7 +376,7 @@ def list_movie_streams(url,iid,movie):
 		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
 	xbmcplugin.endOfDirectory(_handle)
 
-def list_series(category,listt):
+def list_series(category,listt,page=0):
 	catName = category
 	catFN = ''
 	for cat in CATEGORIES:
@@ -403,6 +404,15 @@ def list_series(category,listt):
 		xbmcplugin.endOfDirectory(_handle)
 		return
 
+	if _pageing:
+		series = series[_per_page * page : _per_page * (page+1)]
+
+	if _pageing and page > 0:
+		list_item = xbmcgui.ListItem(label=_addon.getLocalizedString(30107))
+		link = get_url(action='series', category=category, listt=listt, page=page-1)
+		is_folder = True
+		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
+		
 	for serie in series:
 		list_item = xbmcgui.ListItem(label=serie['nazov_1'])
 		list_item.setInfo('video', {'title': serie['nazov_1'],
@@ -415,7 +425,13 @@ def list_series(category,listt):
 		is_folder = True
 		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
 	
-	xbmcplugin.endOfDirectory(_handle)
+	if _pageing:
+		list_item = xbmcgui.ListItem(label=_addon.getLocalizedString(30108))
+		link = get_url(action='series', category=category, listt=listt, page=page+1)
+		is_folder = True
+		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
+	
+	xbmcplugin.endOfDirectory(_handle, updateListing=_pageing and page > 0)
 
 def get_series_info(iid):
 	series_data = _session.get('https://www.bombuj.eu/android_api/serialy/getserialjson.php?id=' + iid + '', headers=HEADERS)
@@ -532,7 +548,6 @@ def play_stream(code,vh,url,iid):
 			elif 'Form' == olpair_state:
 				open_browser('https://olpair.com/')
 	elif vh == 'streamango.com':
-		#<track kind="captions" src="https://content.fruithosted.net/subtitle/mdsbfbcleepoepqo/orlmprbfnosofqcb.vtt" srclang="aa" label="Afar" default />
 		path = 'https://streamango.com/embed/' + code
 		subtitles = get_track_subtitles(path)
 	elif vh == 'exashare.com' or vh == 'netu.tv':
@@ -627,7 +642,10 @@ def router(paramstring):
 			category = ''
 			if 'category' in params:
 				category = params['category']
-			list_series(category,params['listt'])
+			try: 
+				list_series(category,params['listt'],int(params['page']))
+			except:
+				list_series(category,params['listt'])
 		elif params['action'] == 'series_searched':
 			list_searched_series_series(params['iid'])
 		elif params['action'] == 'series_series':
