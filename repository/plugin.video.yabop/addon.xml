@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon id="plugin.video.yabop" version="1.0.3" name="YABoP" provider-name="cache">
+<addon id="plugin.video.yabop" version="1.1.0" name="YABoP" provider-name="cache">
 	<requires>
     	<import addon="xbmc.python" version="2.19.0" />
 		<import addon="script.module.resolveurl" version="5.0.00"/>
 		<import addon="script.module.requests" version="2.18.4"/>
+		<import addon="script.module.unidecode" version="0.4.16"/>
 	</requires>
 	<extension point="xbmc.python.pluginsource" library="main.py">
 		<provides>video</provides>
@@ -29,6 +30,12 @@
     		<fanart>fanart.jpg</fanart>
 		</assets>
 		<news>
+1.1.0
+- pridanie titulkov zo streamango
+- pridanie cachovania a strankovania pre zoznam filmov a serialov
+- pridanie experimentalneho automatickeho otvarania olpair.com
+- pridanie nastaveni - cachovanie default zapnute, strankovanie a olpair vypnute
+- fixnutie diakritiky vo vyhladavani, stiahne si modul unidecode
 1.0.3
 - pridanie korektneho linku na forum
 1.0.2
