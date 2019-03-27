@@ -65,6 +65,14 @@ msgctxt "#30022"
 msgid "Try to detect and open olpair.com"
 msgstr "Pokusit se rozeznát a otevřít olpair.com"
 
+msgctxt "#30023"
+msgid "Use paging in list of movies and list of series"
+msgstr "Použít stránkování v seznamu filmů a seriálů"
+
+msgctxt "#30024"
+msgid "Use caching for retrieved data"
+msgstr "Použít cachování stahovaných dat"
+
 msgctxt "#30100"
 msgid "Bombuj content type"
 msgstr "Typ obsahu na Bombuj"
@@ -92,6 +100,14 @@ msgstr "Epizoda"
 msgctxt "#30106"
 msgid "Series"
 msgstr "Série"
+
+msgctxt "#30107"
+msgid "Previous page"
+msgstr "Předchozí stránka"
+
+msgctxt "#30108"
+msgid "Next page"
+msgstr "Další stránka"
 
 msgctxt "#30200"
 msgid "Categories"

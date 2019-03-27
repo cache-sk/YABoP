@@ -28,8 +28,14 @@ _addon = xbmcaddon.Addon()
 _session = requests.Session()
 _profile = xbmc.translatePath( _addon.getAddonInfo('profile')).decode("utf-8")
 
-_per_page = int(xbmcplugin.getSetting(_handle, 'per_page'))
-_try_olpair = xbmcplugin.getSetting(_handle, 'try_olpair') == 'true'
+try: _cacheing = xbmcplugin.getSetting(_handle, 'cacheing') == 'true'
+except: _cacheing = true
+try: _pageing = xbmcplugin.getSetting(_handle, 'pageing') == 'true'
+except: _pageing = false
+try: _per_page = int(xbmcplugin.getSetting(_handle, 'per_page'))
+except: _per_page = 100
+try: _try_olpair = xbmcplugin.getSetting(_handle, 'try_olpair') == 'true'
+except: _try_olpair = false
 
 CACHED_DATA_MAX_AGE = 14400 #4h; 43200 #12h
 
@@ -98,13 +104,14 @@ def get_cached_or_load(name, url):
 	last_data = ''
 	already_tried = False
 	current = time.time()
-	try:
-		with io.open(_profile + name + "_last_data", 'r', encoding='utf8') as file:
-			last_data = file.read()
-			file.close()
-	except Exception as e:
-		xbmc.log('Can\'t load ' + name + '_last_data\n'+str(e),level=xbmc.LOGNOTICE)
-		traceback.print_exc()
+	if _cacheing:
+		try:
+			with io.open(_profile + name + "_last_data", 'r', encoding='utf8') as file:
+				last_data = file.read()
+				file.close()
+		except Exception as e:
+			xbmc.log('Can\'t load ' + name + '_last_data\n'+str(e),level=xbmc.LOGNOTICE)
+			traceback.print_exc()
 	
 	if last_data != '': # there are some stored data
 		try:
@@ -135,7 +142,7 @@ def get_cached_or_load(name, url):
 			xbmc.log('Can\'t load or store data from bombuj\n'+str(e),level=xbmc.LOGNOTICE)
 			traceback.print_exc()
 	
-	if not data and last_data != '' and not already_tried: # there are some not fresh stored data, but couldn't load new ones
+	if not data and last_data != '' and not already_tried and _cacheing: # there are some not fresh stored data, but couldn't load new ones
 		try:
 			with io.open(_profile + name + "_data", 'r', encoding='utf8') as file:
 				fdata = file.read()
@@ -260,7 +267,7 @@ def list_lists(ctype,category):
 			xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
 	xbmcplugin.endOfDirectory(_handle)
 	
-def list_movies(category,listt):
+def list_movies(category,listt,page=0):
 	catName = category
 	catFN = ''
 	for cat in CATEGORIES:
@@ -288,6 +295,15 @@ def list_movies(category,listt):
 		xbmcplugin.endOfDirectory(_handle)
 		return
 
+	if _pageing:
+		movies = movies[_per_page * page : _per_page * (page+1)]
+
+	if _pageing and page > 0:
+		list_item = xbmcgui.ListItem(label=_addon.getLocalizedString(30107))
+		link = get_url(action='movies', category=category, listt=listt, page=page-1)
+		is_folder = True
+		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
+		
 	for movie in movies:
 		list_item = xbmcgui.ListItem(label=movie['name'])
 		list_item.setInfo('video', {'title': movie['name'],
@@ -300,7 +316,13 @@ def list_movies(category,listt):
 		is_folder = True
 		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
 	
-	xbmcplugin.endOfDirectory(_handle)
+	if _pageing:
+		list_item = xbmcgui.ListItem(label=_addon.getLocalizedString(30108))
+		link = get_url(action='movies', category=category, listt=listt, page=page+1)
+		is_folder = True
+		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
+	
+	xbmcplugin.endOfDirectory(_handle, updateListing=_pageing and page > 0)
 
 def get_movie_info(iid):
 	movie_data = _session.get('https://www.bombuj.eu/android_api/filmy/getfilmjson.php?id=' + iid + '', headers=HEADERS)
@@ -477,24 +499,29 @@ def list_series_episodes(serie,url,iid):
 		xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
 	xbmcplugin.endOfDirectory(_handle)
 
+def get_track_subtitles(path):
+	subtitles = []
+	try:
+		embed_data = _session.get(path)
+		captions = re.findall("<track.*kind=\"captions\".*/>", embed_data.text)
+		if captions:
+			srcreg = re.compile("<track.*src=\"((?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+)\".*/>")
+			for cap in captions:
+				src = srcreg.search(cap)
+				if src:
+					subtitles.append(src.group(1))
+	except Exception as e:
+		xbmc.log(str(e),level=xbmc.LOGNOTICE)
+		traceback.print_exc()
+	return subtitles
+
 def play_stream(code,vh,url,iid):
 	path = ''
 	subtitles = []
 	if vh == 'openload.io':
 		path = 'https://openload.co/embed/' + code
-		try:
-			embed_data = _session.get(path)
-			captions = re.findall("<track.*kind=\"captions\".*/>", embed_data.text)
-			if captions:
-				srcreg = re.compile("<track.*src=\"((?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+)\".*/>")
-				for cap in captions:
-					src = srcreg.search(cap)
-					if src:
-						subtitles.append(src.group(1))
-		except Exception as e:
-			xbmc.log(str(e),level=xbmc.LOGNOTICE)
-			traceback.print_exc()
-
+		subtitles = get_track_subtitles(path)
+		
 		# olpair chceck - development in progress
 		if _try_olpair:
 			olpair_data = _session.get('https://olpair.com/')
@@ -505,7 +532,9 @@ def play_stream(code,vh,url,iid):
 			elif 'Form' == olpair_state:
 				open_browser('https://olpair.com/')
 	elif vh == 'streamango.com':
+		#<track kind="captions" src="https://content.fruithosted.net/subtitle/mdsbfbcleepoepqo/orlmprbfnosofqcb.vtt" srclang="aa" label="Afar" default />
 		path = 'https://streamango.com/embed/' + code
+		subtitles = get_track_subtitles(path)
 	elif vh == 'exashare.com' or vh == 'netu.tv':
 		xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
 		
@@ -586,7 +615,10 @@ def router(paramstring):
 			category = ''
 			if 'category' in params:
 				category = params['category']
-			list_movies(category,params['listt'])
+			try: 
+				list_movies(category,params['listt'],int(params['page']))
+			except:
+				list_movies(category,params['listt'])
 		elif params['action'] == 'movies_searched':
 			list_searched_movie_streams(params['iid'])
 		elif params['action'] == 'movie_streams':

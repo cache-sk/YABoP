@@ -56,6 +56,14 @@ msgctxt "#30022"
 msgid "Try to detect and open olpair.com"
 msgstr ""
 
+msgctxt "#30023"
+msgid "Use paging in list of movies and list of series"
+msgstr ""
+
+msgctxt "#30024"
+msgid "Use caching for retrieved data"
+msgstr ""
+
 msgctxt "#30100"
 msgid "Bombuj content type"
 msgstr ""
@@ -82,6 +90,14 @@ msgstr ""
 
 msgctxt "#30106"
 msgid "Series"
+msgstr ""
+
+msgctxt "#30107"
+msgid "Previous page"
+msgstr ""
+
+msgctxt "#30108"
+msgid "Next page"
 msgstr ""
 
 msgctxt "#30200"
