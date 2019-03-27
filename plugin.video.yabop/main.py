@@ -20,6 +20,7 @@ import os
 import traceback
 import re
 import webbrowser
+import unidecode
 
 _url = sys.argv[0]
 _handle = int(sys.argv[1])
@@ -202,17 +203,36 @@ def list_categories(ctype):
 	xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
 	xbmcplugin.endOfDirectory(_handle)
 
-def is_found(query,name):
-	if query in name:
-		return True
-	if isinstance(query, unicode): #strip
-		query = query.encode('utf-8').strip()
-	query = query.lower()
-	if isinstance(name, unicode): #strip
-		name = name.encode('utf-8').strip()
-	name = name.lower()
-	if query in name:
-		return True
+def normalize(query):
+	try:
+		query = unidecode.unidecode(query)
+		query = query.strip().lower()
+		return query
+	except:
+		return ''
+
+def is_found(query,name,normalized):
+	try:
+		if query in name:
+			return True
+	except:
+		pass
+		
+	if normalized != '':
+		try:
+			if normalized in name:
+				return True
+		except:
+			pass
+		
+	nn = normalize(name)
+	if nn != '':
+		try:
+			if normalized in nn:
+				return True
+		except:
+			pass
+		
 	return False
 
 def list_search(ctype):
@@ -232,13 +252,17 @@ def list_search(ctype):
 		if not query:
 			xbmcplugin.endOfDirectory(_handle)
 			return
+		try:
+			normalized = normalize(query.decode('utf-8'))
+		except:
+			normalized = normalize(query)
 		for item in data:
 			name = ''
 			if isSeries:
 				name = item['nazov_1']
 			else:
 				name = item['name']
-			if is_found(query,name):
+			if is_found(query,name,normalized):
 				list_item = xbmcgui.ListItem(label=name)
 				list_item.setInfo('video', {'title': name,
 											'mediatype': 'video'})
