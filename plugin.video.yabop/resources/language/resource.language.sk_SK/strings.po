@@ -64,6 +64,26 @@ msgctxt "#30024"
 msgid "Use caching for retrieved data"
 msgstr "Použiť cachovanie sťahovaných dát"
 
+msgctxt "#30025"
+msgid "Types of movies in lists"
+msgstr "Typy filmov v zoznamoch"
+
+msgctxt "#30026"
+msgid "Both subtitles and dubbing"
+msgstr "Titulky aj dabing"
+
+msgctxt "#30027"
+msgid "Only dubbing"
+msgstr "Iba dabing"
+
+msgctxt "#30028"
+msgid "Only subtitles"
+msgstr "Iba titulky"
+
+msgctxt "#30029"
+msgid "Cache age in seconds"
+msgstr "Vek cache v sekundách"
+
 msgctxt "#30100"
 msgid "Bombuj content type"
 msgstr "Typ obsahu na Bombuj"

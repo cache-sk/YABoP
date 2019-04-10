@@ -29,16 +29,7 @@ _addon = xbmcaddon.Addon()
 _session = requests.Session()
 _profile = xbmc.translatePath( _addon.getAddonInfo('profile')).decode("utf-8")
 
-try: _cacheing = xbmcplugin.getSetting(_handle, 'cacheing') == 'true'
-except: _cacheing = true
-try: _pageing = xbmcplugin.getSetting(_handle, 'pageing') == 'true'
-except: _pageing = false
-try: _per_page = int(xbmcplugin.getSetting(_handle, 'per_page'))
-except: _per_page = 100
-try: _try_olpair = xbmcplugin.getSetting(_handle, 'try_olpair') == 'true'
-except: _try_olpair = false
-
-CACHED_DATA_MAX_AGE = 14400 #4h; 43200 #12h
+CACHED_DATA_MAX_AGE = 14400 #4h default
 
 BOMBUJ_API = 'http://www.bombuj.eu/android_api/'
 HEADERS={'User-Agent': 'android', 'Referer': BOMBUJ_API}
@@ -83,6 +74,21 @@ LISTS = [
 	{'list':'top_dnes','msg':_addon.getLocalizedString(30305),'series':False},
 	{'list':'top_celkovo','msg':_addon.getLocalizedString(30306),'series':True}]
 
+LISTTYPES = ['aj_s_titulkami','len_dabovane','len_s_titulkami']
+
+try: _cacheing = xbmcplugin.getSetting(_handle, 'cacheing') == 'true'
+except: _cacheing = true
+try: _cache_age = int(xbmcplugin.getSetting(_handle, 'cache_age'))
+except: _cache_age = CACHED_DATA_MAX_AGE
+try: _pageing = xbmcplugin.getSetting(_handle, 'pageing') == 'true'
+except: _pageing = false
+try: _per_page = int(xbmcplugin.getSetting(_handle, 'per_page'))
+except: _per_page = 100
+try: _try_olpair = xbmcplugin.getSetting(_handle, 'try_olpair') == 'true'
+except: _try_olpair = false
+try: _list_type = LISTTYPES[int(xbmcplugin.getSetting(_handle, 'list_type'))]
+except: _list_type = LISTTYPES[0]
+
 def get_url(**kwargs):
 	return '{0}?{1}'.format(_url, urlencode(kwargs, 'utf-8'))
 
@@ -90,13 +96,12 @@ def check_profile():
 	if not os.path.exists(_profile):
 		os.makedirs(_profile)
 		
-	# old cache cleaning, to be removed in future releases
-	if not os.path.isfile(_profile + 'old_removed'):
-		if os.path.isfile(_profile + 'movies_data'): os.unlink(_profile + 'movies_data')
-		if os.path.isfile(_profile + 'movies_last_data'): os.unlink(_profile + 'movies_last_data')
-		if os.path.isfile(_profile + 'series_data'): os.unlink(_profile + 'series_data')
-		if os.path.isfile(_profile + 'series_last_data'): os.unlink(_profile + 'series_last_data')
-		with io.open(_profile + "old_removed", 'w', encoding='utf8') as file:
+	# refresh cache for new version
+	if not os.path.isfile(os.path.join(_profile, 'cache_refreshed')):
+		cache_files = [f for f in os.listdir(_profile) if (os.path.isfile(os.path.join(_profile, f)) and f != 'settings.xml')]
+		for f in cache_files:
+			os.unlink(os.path.join(_profile, f))
+		with io.open(os.path.join(_profile, 'cache_refreshed'), 'w', encoding='utf8') as file:
 			file.close()
 
 def get_cached_or_load(name, url):
@@ -107,7 +112,7 @@ def get_cached_or_load(name, url):
 	current = time.time()
 	if _cacheing:
 		try:
-			with io.open(_profile + name + "_last_data", 'r', encoding='utf8') as file:
+			with io.open(os.path.join(_profile, name + "_last_data"), 'r', encoding='utf8') as file:
 				last_data = file.read()
 				file.close()
 		except Exception as e:
@@ -118,8 +123,8 @@ def get_cached_or_load(name, url):
 		try:
 			last = float(last_data)
 			age = current - last
-			if age < CACHED_DATA_MAX_AGE: #fresh data - load it
-				with io.open(_profile + name + "_data", 'r', encoding='utf8') as file:
+			if age < _cache_age: #fresh data - load it
+				with io.open(os.path.join(_profile, name + "_data"), 'r', encoding='utf8') as file:
 					fdata = file.read()
 					file.close()
 					data = json.loads(fdata, "utf-8")
@@ -134,10 +139,10 @@ def get_cached_or_load(name, url):
 			wdata = _session.get(url, headers=HEADERS)
 			data = json.loads(wdata.text, "utf-8")
 			if _cacheing:
-				with io.open(_profile + name + "_data", 'w', encoding='utf8') as file:
+				with io.open(os.path.join(_profile, name + "_data"), 'w', encoding='utf8') as file:
 					file.write(json.dumps(data).decode('utf8'))
 					file.close()
-				with io.open(_profile + name + "_last_data", 'w', encoding='utf8') as file:
+				with io.open(os.path.join(_profile, name + "_last_data"), 'w', encoding='utf8') as file:
 					file.write(str(current).decode('utf-8'))
 					file.close()
 		except Exception as e:
@@ -146,7 +151,7 @@ def get_cached_or_load(name, url):
 	
 	if not data and last_data != '' and not already_tried and _cacheing: # there are some not fresh stored data, but couldn't load new ones
 		try:
-			with io.open(_profile + name + "_data", 'r', encoding='utf8') as file:
+			with io.open(os.path.join(_profile, name + "_data"), 'r', encoding='utf8') as file:
 				fdata = file.read()
 				file.close()
 				data = json.loads(fdata, "utf-8")
@@ -311,7 +316,7 @@ def list_movies(category,listt,page=0):
 	movies = []
 	
 	try:
-		loaded = get_cached_or_load('list_movies_' + listt + '_' + catFN, BOMBUJ_API + 'filmy/get_items_as_json.php?type=' + listt + '&zaner=' + category + '&sort=aj_s_titulkami') #aj_s_titulkami/len_dabovane/len_s_titulkami
+		loaded = get_cached_or_load('list_movies_' + listt + '_' + catFN + '_' + _list_type, BOMBUJ_API + 'filmy/get_items_as_json.php?type=' + listt + '&zaner=' + category + '&sort=' + _list_type)
 		movies = loaded[listt]
 	except Exception as e:
 		xbmc.log(str(e),level=xbmc.LOGNOTICE)

@@ -64,6 +64,26 @@ msgctxt "#30024"
 msgid "Use caching for retrieved data"
 msgstr ""
 
+msgctxt "#30025"
+msgid "Types of movies in lists"
+msgstr ""
+
+msgctxt "#30026"
+msgid "Both subtitles and dubbing"
+msgstr ""
+
+msgctxt "#30027"
+msgid "Only dubbing"
+msgstr ""
+
+msgctxt "#30028"
+msgid "Only subtitles"
+msgstr ""
+
+msgctxt "#30029"
+msgid "Cache age in seconds"
+msgstr ""
+
 msgctxt "#30100"
 msgid "Bombuj content type"
 msgstr ""
