@@ -577,6 +577,9 @@ def play_stream(code,vh,url,iid):
 	elif vh == 'streamango.com':
 		path = 'https://streamango.com/embed/' + code
 		subtitles = get_track_subtitles(path)
+	elif vh == 'verystream.com':
+		path = 'https://verystream.com/e/' + code
+		subtitles = get_track_subtitles(path)
 	elif vh == 'exashare.com' or vh == 'netu.tv':
 		xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
 		
