@@ -8,4 +8,4 @@ import sys
 import yabop
 
 if __name__ == '__main__':
-	yabop.router(sys.argv[2][1:])
+    yabop.router(sys.argv[2][1:])
