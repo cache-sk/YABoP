@@ -14,6 +14,7 @@ Je tam aj jednoduché vyhľadávanie (ako posledná kategória v sekcii), výsle
 Plugin aktuálne rozoznáva tieto share stránky:
 - openload.io - prehrá a aj sa pokúsi stiahnuť a použiť titulky priamo z openload
 - streamango.com - prehrá a aj sa pokúsi stiahnuť a použiť titulky priamo zo streamango
+- verystream.com - prehrá a aj sa pokúsi stiahnuť a použiť titulky priamo z verystream
 - exashare.com - už neexistuje
 - netu.tv - nevie prehrať (aj samotné netu nezmyselne presmeruje)
 
@@ -45,8 +46,8 @@ ZIP stiahnete kliknutím na detail a následne tlačidlom Download. Resolveurl s
 Ostatné potrebné knižnice by si mal stiahnuť sám z oficiálneho kodi repozitára.
 
 ## Inštalácia a aktualizácia
-Aktuálnu verziu nájdete vždy v časti [repository](https://github.com/cache-sk/YABoP/tree/master/repository/plugin.video.yabop) a stiahnete rovnako, ako spomínaný kodi repozitár vyššie.
-Plugin následne slúži aj sám sebe ako repozitár, takže vždy keď sem vypublikujem novú verziu, tak sa aktualizuje aj u Vás.
+Vytvoril som vlastnú repository, kde sa nachádza aj tento plugin, aj moznost nainstalovat vyssie spomenutú repository repository.tva.common.
+Zip stiahnete tu - https://github.com/cache-sk/kodirepo/tree/master/repository/repository.cache-sk
 
 Predpokladám, že inštaláciu zo ZIP súboru a povolenie takejto inštalácie zvládnete sami.
 
