@@ -542,10 +542,10 @@ def list_series_episodes(serie,url,iid):
         xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
     xbmcplugin.endOfDirectory(_handle)
 
-def get_track_subtitles(path):
+def get_track_subtitles(path, referer = None):
     subtitles = []
     try:
-        embed_data = _session.get(path)
+        embed_data = _session.get(path) if referer is None else _session.get(path, headers={'Referer': referer})
         captions = re.findall("<track.*kind=\"captions\".*/>", embed_data.text)
         if captions:
             srcreg = re.compile("<track.*src=\"((?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+)\".*/>")
@@ -579,7 +579,7 @@ def play_stream(code,vh,url,iid):
         subtitles = get_track_subtitles(path)
     elif vh == 'verystream.com':
         path = 'https://verystream.com/e/' + code
-        subtitles = get_track_subtitles(path)
+        subtitles = get_track_subtitles(path, 'https://verystream.com')
     elif vh == 'exashare.com' or vh == 'netu.tv':
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
         
