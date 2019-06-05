@@ -359,7 +359,7 @@ def list_movies(category,listt,page=0):
     xbmcplugin.endOfDirectory(_handle, updateListing=_pageing and page > 0)
 
 def get_movie_info(iid):
-    movie_data = _session.get('https://www.bombuj.eu/android_api/filmy/getfilmjson.php?id=' + iid + '', headers=HEADERS)
+    movie_data = _session.get(BOMBUJ_API + 'filmy/getfilmjson.php?id=' + iid + '', headers=HEADERS)
     movie_loaded = json.loads(movie_data.text, "utf-8")
     movie = movie_loaded['film'][0]
     return movie
@@ -383,7 +383,7 @@ def list_movie_streams(url,iid,movie):
     streams = []
     
     try:
-        streams_data = _session.get('https://www.bombuj.eu/android_api/filmy/getlanguagesjson.php?url=' + url + '', headers=HEADERS)
+        streams_data = _session.get(BOMBUJ_API + 'filmy/getlanguagesjson.php?url=' + url + '', headers=HEADERS)
         streams_loaded = json.loads(streams_data.text, "utf-8")
         streams = streams_loaded['typ']
         if not movie:
@@ -465,7 +465,7 @@ def list_series(category,listt,page=0):
     xbmcplugin.endOfDirectory(_handle, updateListing=_pageing and page > 0)
 
 def get_series_info(iid):
-    series_data = _session.get('https://www.bombuj.eu/android_api/serialy/getserialjson.php?id=' + iid + '', headers=HEADERS)
+    series_data = _session.get(BOMBUJ_API + 'serialy/getserialjson.php?id=' + iid + '', headers=HEADERS)
     series_loaded = json.loads(series_data.text, "utf-8")
     series = series_loaded['serial'][0]
     return series
@@ -489,7 +489,7 @@ def list_series_series(url,iid,series):
     series_series = []
     
     try:
-        series_series_data = _session.get('https://www.bombuj.eu/android_api/serialy/seriejson.php?url=' + url + '', headers=HEADERS)
+        series_series_data = _session.get(BOMBUJ_API + 'serialy/seriejson.php?url=' + url + '', headers=HEADERS)
         series_series_loaded = json.loads(series_series_data.text, "utf-8")
         series_series = series_series_loaded['serie']
         if not series:
@@ -519,7 +519,7 @@ def list_series_episodes(serie,url,iid):
     episodes = []
     
     try:
-        episodes_data = _session.get('https://www.bombuj.eu/android_api/serialy/epizodyjson.php?url=' + url + '&seria=' + serie, headers=HEADERS)
+        episodes_data = _session.get(BOMBUJ_API + 'serialy/epizodyjson.php?url=' + url + '&seria=' + serie, headers=HEADERS)
         episodes_loaded = json.loads(episodes_data.text, "utf-8")
         episodes = episodes_loaded['epizody']
         series = get_series_info(iid)
@@ -537,7 +537,7 @@ def list_series_episodes(serie,url,iid):
                                     'genre': series['zaner']})
         list_item.setArt({'thumb': COVERS_SERIES + series['url'] + '.jpg'})
         list_item.setProperty('IsPlayable', 'true')
-        link = get_url(action='play', code=episode['code'], vh='openload.io', url=url, iid=iid)
+        link = get_url(action='play', code=episode['code'], vh='bombuj_episode', url=url, iid=iid)
         is_folder = False
         xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
     xbmcplugin.endOfDirectory(_handle)
@@ -561,9 +561,45 @@ def get_track_subtitles(path, referer = None):
 def play_stream(code,vh,url,iid):
     path = ''
     subtitles = []
+
+    if vh == 'bombuj_episode': #additional data for episode is required
+        vh = ''
+        episodes_additional_data = _session.get(BOMBUJ_API + 'web/serialplay.php?id=' + iid, headers=HEADERS)
+        code_safe = re.escape(code)
+        # format is code(*que*c1_file=subs*and*c1_label=label);provider
+        episodes_stream_data = re.findall("<a onclick=\"getEpisodes\('" + code_safe + "([^\s]*)',[,' 0-9]+\)\">", episodes_additional_data.text)
+        print(episodes_stream_data)
+        if len(episodes_stream_data) == 1: #process provider and subtitles
+            try: #provider
+                stream_data = episodes_stream_data[0].split(';')
+                if 'openload' in stream_data[1]:
+                    vh = 'openload.io'
+                elif 'verystream' in stream_data[1]:
+                    vh = 'verystream.com'
+                elif 'streamango' in stream_data[1]:
+                    vh = 'streamango.com'
+
+                try: #provider was detected, try subtitles
+                    if len(stream_data[0]) > 0:
+                        params = dict(parse_qsl(stream_data[0].replace("*que*", "").replace("*and*", "&")))
+                        for key in params:
+                            if 'file' in key and 'http' in params[key]:
+                                subtitles.append(params[key])
+                except:
+                    pass
+            except:
+                pass
+
+
+        if vh == '':
+            xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
+            xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
+            return
+
+
     if vh == 'openload.io':
         path = 'https://openload.co/embed/' + code
-        subtitles = get_track_subtitles(path)
+        subtitles.extend(get_track_subtitles(path, 'https://openload.co'))
         
         # olpair chceck - development in progress
         if _try_olpair:
@@ -576,10 +612,10 @@ def play_stream(code,vh,url,iid):
                 open_browser('https://olpair.com/')
     elif vh == 'streamango.com':
         path = 'https://streamango.com/embed/' + code
-        subtitles = get_track_subtitles(path)
+        subtitles.extend(get_track_subtitles(path))
     elif vh == 'verystream.com':
         path = 'https://verystream.com/e/' + code
-        subtitles = get_track_subtitles(path, 'https://verystream.com')
+        subtitles.extend(get_track_subtitles(path, 'https://verystream.com'))
     elif vh == 'exashare.com' or vh == 'netu.tv':
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
         
