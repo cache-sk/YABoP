@@ -31,10 +31,12 @@ _profile = xbmc.translatePath( _addon.getAddonInfo('profile')).decode("utf-8")
 
 CACHED_DATA_MAX_AGE = 14400 #4h default
 
-BOMBUJ_API = 'http://www.bombuj.eu/android_api/'
+BOMBUJ_API = 'http://www.bombuj.tv/android_api/'
 HEADERS={'User-Agent': 'android', 'Referer': BOMBUJ_API}
-COVERS_MOVIES = 'http://www.bombuj.eu/images/covers/all/'
-COVERS_SERIES = 'http://serialy.bombuj.eu/images/covers/'
+COVERS_MOVIES = 'http://www.bombuj.tv/images/covers/all/'
+COVERS_SERIES = 'http://serialy.bombuj.tv/images/covers/'
+SERIES_SUBTITLES = 'http://serialy.bombuj.tv/tit/'
+SERIES_SUBTITLES_FAKE = 'http://b.6f.sk/'
 
 CTYPES = [{'type':'movies','msg':_addon.getLocalizedString(30101), 'icon':'DefaultMovies.png'},
     {'type':'series','msg':_addon.getLocalizedString(30102), 'icon':'DefaultTVShows.png'}]
@@ -584,7 +586,11 @@ def play_stream(code,vh,url,iid):
                         params = dict(parse_qsl(stream_data[0].replace("*que*", "").replace("*and*", "&")))
                         for key in params:
                             if 'file' in key and 'http' in params[key]:
-                                subtitles.append(params[key])
+                                try:
+                                    tit = params[key].replace(SERIES_SUBTITLES_FAKE,SERIES_SUBTITLES)
+                                except:
+                                    tit = params[key]
+                                subtitles.append(tit)
                 except:
                     pass
             except:
@@ -595,8 +601,6 @@ def play_stream(code,vh,url,iid):
             xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
             xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
             return
-
-
     if vh == 'openload.io':
         path = 'https://openload.co/embed/' + code
         subtitles.extend(get_track_subtitles(path, 'https://openload.co'))
