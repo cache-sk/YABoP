@@ -15,6 +15,7 @@ Plugin aktuálne rozoznáva tieto share stránky:
 - openload.io - prehrá a aj sa pokúsi stiahnuť a použiť titulky priamo z openload
 - streamango.com - prehrá a aj sa pokúsi stiahnuť a použiť titulky priamo zo streamango
 - verystream.com - prehrá a aj sa pokúsi stiahnuť a použiť titulky priamo z verystream
+- mixdrop.co - prehrá aj s titulkami
 - exashare.com - už neexistuje
 - netu.tv - nevie prehrať (aj samotné netu nezmyselne presmeruje)
 
