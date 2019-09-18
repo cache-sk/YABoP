@@ -563,6 +563,7 @@ def get_track_subtitles(path, referer = None):
 def play_stream(code,vh,url,iid):
     path = ''
     subtitles = []
+    resolved = False
 
     if vh == 'bombuj_episode': #additional data for episode is required
         vh = ''
@@ -620,6 +621,22 @@ def play_stream(code,vh,url,iid):
     elif vh == 'verystream.com':
         path = 'https://verystream.com/e/' + code
         subtitles.extend(get_track_subtitles(path, 'https://verystream.com'))
+    elif vh == 'mixdrop.co':
+        #self resolve!
+        embed = 'https://mixdrop.co/e/' + code
+        embed_data = _session.get(embed, headers={'Referer': 'http://www.bombuj.tv/prehravace/mixdrop.co.php?url='+url+'&id78=12025'})
+        pathmatch = re.findall('MDCore.vsrc = "(.*)";', embed_data.text)
+        if len(pathmatch) == 1:
+            resolved = True
+            path = pathmatch[0]
+            if not path.startswith('http') and path.startswith('//'):
+                path = 'https:' + path
+            submatch = re.findall('MDCore.sub = "(.*)";', embed_data.text)
+            if len(submatch) == 1: #more?
+                sub = submatch[0]
+                if not sub.startswith('http') and sub.startswith('//'):
+                    sub = 'https:' + sub
+                subtitles = [sub]
     elif vh == 'exashare.com' or vh == 'netu.tv':
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
         
@@ -631,7 +648,7 @@ def play_stream(code,vh,url,iid):
         return
         
     try:
-        resolved_url = resolveurl.resolve(path)
+        resolved_url = path if resolved else resolveurl.resolve(path)
         listitem = xbmcgui.ListItem(path=resolved_url)
         if subtitles:
             listitem.setSubtitles(subtitles)
