@@ -570,23 +570,23 @@ def play_stream(code,vh,url,iid):
         episodes_additional_data = _session.get(BOMBUJ_API + 'web/serialplay.php?id=' + iid, headers=HEADERS)
         code_safe = re.escape(code)
         # format is code(*que*c1_file=subs*and*c1_label=label);provider
-        episodes_stream_data = re.findall("<a onclick=\"getEpisodes\('" + code_safe + "([^\s]*)',[,' 0-9]+\)\">", episodes_additional_data.text)
-        print(episodes_stream_data)
+        episodes_stream_data = re.findall("<a onclick=\"getEpisodes\('([^\s]*)" + code_safe + "([^\s]*)',[,' 0-9]+\)\">", episodes_additional_data.text)
         if len(episodes_stream_data) == 1: #process provider and subtitles
             try: #provider
-                stream_data = episodes_stream_data[0].split(';')
-                if 'openload' in stream_data[1]:
+                provider = episodes_stream_data[0][0]
+                stream_data = episodes_stream_data[0][1].split(';')
+                if 'openload' in stream_data[1] or 'openload' in provider:
                     vh = 'openload.io'
-                elif 'verystream' in stream_data[1]:
+                elif 'verystream' in stream_data[1] or 'verystream' in provider:
                     vh = 'verystream.com'
-                elif 'streamango' in stream_data[1]:
+                elif 'streamango' in stream_data[1] or 'streamango' in provider:
                     vh = 'streamango.com'
-
+                print("provider detected "+vh)
                 try: #provider was detected, try subtitles
                     if len(stream_data[0]) > 0:
                         params = dict(parse_qsl(stream_data[0].replace("*que*", "").replace("*and*", "&")))
                         for key in params:
-                            if 'file' in key and 'http' in params[key]:
+                            if ('file' in key or 'sub' in key) and 'http' in params[key]:
                                 try:
                                     tit = params[key].replace(SERIES_SUBTITLES_FAKE,SERIES_SUBTITLES)
                                 except:
@@ -625,18 +625,36 @@ def play_stream(code,vh,url,iid):
         #self resolve!
         embed = 'https://mixdrop.co/e/' + code
         embed_data = _session.get(embed, headers={'Referer': 'http://www.bombuj.tv/prehravace/mixdrop.co.php?url='+url+'&id78=12025'})
-        pathmatch = re.findall('MDCore.vsrc = "(.*)";', embed_data.text)
+        pathmatch = re.findall('MDCore.vsrc = "([^"]*)";', embed_data.text)
         if len(pathmatch) == 1:
             resolved = True
             path = pathmatch[0]
             if not path.startswith('http') and path.startswith('//'):
                 path = 'https:' + path
-            submatch = re.findall('MDCore.sub = "(.*)";', embed_data.text)
-            if len(submatch) == 1: #more?
+            submatch = re.findall('MDCore.sub = "([^"]*)";', embed_data.text)
+            if len(submatch) > 0: #more?
                 sub = submatch[0]
                 if not sub.startswith('http') and sub.startswith('//'):
                     sub = 'https:' + sub
                 subtitles = [sub]
+            else:
+                embed_data = _session.get('http://www.bombuj.tv/prehravace/mixdrop.co.php?url='+url+'&id78=12485', headers={'Referer': 'http://www.bombuj.tv/prehravace/overeniecaptcha3final.php?id78=12485&url='+url+'&vip=&vh=mixdrop.co'})
+                submatch = re.findall('data-src="([^"]*)"', embed_data.text)
+                if len(submatch) > 0: #more?
+                    sub = submatch[0]
+                    embed_data = _session.get('http://www.bombuj.tv/prehravace/check.php?user='+sub, headers={'Referer': 'http://www.bombuj.tv/prehravace/mixdrop.co.php?url='+url+'&id78=12485'}, allow_redirects=False)
+                    if embed_data.status_code > 300 and embed_data.status_code < 400:
+                        real = embed_data.headers['Location']
+                        real = real.split('?')
+                        #path = real[0]
+                        if len(real) > 1:
+                            params = dict(parse_qsl(real[1]))
+                            if 'sub' in params:
+                                subtitles.append(params['sub'])
+
+
+
+                
     elif vh == 'exashare.com' or vh == 'netu.tv':
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
         
@@ -649,14 +667,19 @@ def play_stream(code,vh,url,iid):
         
     try:
         resolved_url = path if resolved else resolveurl.resolve(path)
-        listitem = xbmcgui.ListItem(path=resolved_url)
-        if subtitles:
-            listitem.setSubtitles(subtitles)
-        xbmcplugin.setResolvedUrl(_handle, True, listitem)
+        if resolved_url:
+            listitem = xbmcgui.ListItem(path=resolved_url)
+            if subtitles:
+                listitem.setSubtitles(subtitles)
+            xbmcplugin.setResolvedUrl(_handle, True, listitem)
+        else:
+            xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30011), str(e))
+            xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
     except Exception as e:
         xbmc.log(str(e),level=xbmc.LOGNOTICE)
         traceback.print_exc()
         xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30008), str(e))
+        xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
         
 def open_browser(url):
     if (webbrowser.open(url, new=1, autoraise=True)):

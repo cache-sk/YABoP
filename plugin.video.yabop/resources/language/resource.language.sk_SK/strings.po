@@ -44,6 +44,10 @@ msgctxt "#30010"
 msgid "Sorry, can't play this stream provider."
 msgstr "Prepáčte, tohto poskytovateľa neviem prehrať."
 
+msgctxt "#30011"
+msgid "Sorry, ResolveURL failed to resolve stream."
+msgstr "Prepáčte, ResolveURL zlyhalo pri snahe získať stream."
+
 msgctxt "#30020"
 msgid "Options"
 msgstr "Možnosti"

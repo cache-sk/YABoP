@@ -53,6 +53,10 @@ msgctxt "#30010"
 msgid "Sorry, can't play this stream provider."
 msgstr "Omlouváme se, tento poskytovatel datového proudu nelze přehrát."
 
+msgctxt "#30011"
+msgid "Sorry, ResolveURL failed to resolve stream."
+msgstr "Promiňte, ResolveURL selhalo při snaze získat stream."
+
 msgctxt "#30020"
 msgid "Options"
 msgstr "Nastavení"
