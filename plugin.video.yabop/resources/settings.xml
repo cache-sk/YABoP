@@ -5,7 +5,6 @@
         <setting label="30029" type="number" id="cache_age" default="14400" enable="eq(-1,true)"/>
         <setting label="30023" type="bool" id="pageing" default="false"/>
         <setting label="30021" type="number" id="per_page" default="20" enable="eq(-1,true)"/>
-        <setting label="30022" type="bool" id="try_olpair" default="false"/>
         <setting id="list_type" type="select" label="30025" values="0|1|2" lvalues="30026|30027|30028" default="0"/>
     </category>
 </settings>

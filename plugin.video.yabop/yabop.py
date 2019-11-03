@@ -19,8 +19,8 @@ import io
 import os
 import traceback
 import re
-import webbrowser
 import unidecode
+import string
 
 _url = sys.argv[0]
 _handle = int(sys.argv[1])
@@ -86,8 +86,6 @@ try: _pageing = xbmcplugin.getSetting(_handle, 'pageing') == 'true'
 except: _pageing = false
 try: _per_page = int(xbmcplugin.getSetting(_handle, 'per_page'))
 except: _per_page = 100
-try: _try_olpair = xbmcplugin.getSetting(_handle, 'try_olpair') == 'true'
-except: _try_olpair = false
 try: _list_type = LISTTYPES[int(xbmcplugin.getSetting(_handle, 'list_type'))]
 except: _list_type = LISTTYPES[0]
 
@@ -404,7 +402,7 @@ def list_movie_streams(url,iid,movie):
                                     'year': movie['year']})
         list_item.setArt({'thumb': COVERS_MOVIES + stream['url'] + '.jpg'})
         list_item.setProperty('IsPlayable', 'true')
-        link = get_url(action='play', code=stream['code'], vh=stream['vh'], url=url, iid=iid)
+        link = get_url(action='play', code=stream['code'], vh=stream['vh'], url=url, iid=iid, tit=stream['tit'] if 'tit' in stream and stream['tit'] else 'none')
         is_folder = False
         xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
     xbmcplugin.endOfDirectory(_handle)
@@ -539,7 +537,7 @@ def list_series_episodes(serie,url,iid):
                                     'genre': series['zaner']})
         list_item.setArt({'thumb': COVERS_SERIES + series['url'] + '.jpg'})
         list_item.setProperty('IsPlayable', 'true')
-        link = get_url(action='play', code=episode['code'], vh='bombuj_episode', url=url, iid=iid)
+        link = get_url(action='play', code=episode['code'], vh='bombuj_episode', url=url, iid=iid, tit='none')
         is_folder = False
         xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
     xbmcplugin.endOfDirectory(_handle)
@@ -560,10 +558,56 @@ def get_track_subtitles(path, referer = None):
         traceback.print_exc()
     return subtitles
 
-def play_stream(code,vh,url,iid):
+# thanks to https://stackoverflow.com/a/2267446
+def int2base(x, base):
+    digs = string.digits + string.ascii_letters
+    if x < 0:
+        sign = -1
+    elif x == 0:
+        return digs[0]
+    else:
+        sign = 1
+
+    x *= sign
+    digits = []
+
+    while x:
+        digits.append(digs[int(x % base)])
+        x = int(x / base)
+
+    if sign < 0:
+        digits.append('-')
+
+    digits.reverse()
+
+    return ''.join(digits)
+
+# thanks to https://stackoverflow.com/a/5995122
+def unpack(p, a, c, k, e=None, d=None):
+    ''' unpack
+    Unpacker for the popular Javascript compression algorithm.
+
+    @param  p  template code
+    @param  a  radix for variables in p
+    @param  c  number of variables in p
+    @param  k  list of c variable substitutions
+    @param  e  not used
+    @param  d  not used
+    @return p  decompressed string
+    '''
+    # Paul Koppen, 2011
+    for i in xrange(c-1,-1,-1):
+        if k[i]:
+            p = re.sub('\\b'+int2base(i,a)+'\\b', k[i], p)
+    return p
+
+def play_stream(code,vh,url,iid,tit):
     path = ''
     subtitles = []
     resolved = False
+
+    if tit != 'none':
+        subtitles.append('https://www.bombuj.tv/titulky/'+tit)
 
     if vh == 'bombuj_episode': #additional data for episode is required
         vh = ''
@@ -575,13 +619,16 @@ def play_stream(code,vh,url,iid):
             try: #provider
                 provider = episodes_stream_data[0][0]
                 stream_data = episodes_stream_data[0][1].split(';')
+                print stream_data
                 if 'openload' in stream_data[1] or 'openload' in provider:
                     vh = 'openload.io'
                 elif 'verystream' in stream_data[1] or 'verystream' in provider:
                     vh = 'verystream.com'
                 elif 'streamango' in stream_data[1] or 'streamango' in provider:
                     vh = 'streamango.com'
-                print("provider detected "+vh)
+                elif 'hqq' in stream_data[1] or 'hqq' in provider or 'netu' in stream_data[1] or 'netu' in provider:
+                    vh = 'netu.tv'
+
                 try: #provider was detected, try subtitles
                     if len(stream_data[0]) > 0:
                         params = dict(parse_qsl(stream_data[0].replace("*que*", "").replace("*and*", "&")))
@@ -602,60 +649,51 @@ def play_stream(code,vh,url,iid):
             xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
             xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
             return
-    if vh == 'openload.io':
-        path = 'https://openload.co/embed/' + code
-        subtitles.extend(get_track_subtitles(path, 'https://openload.co'))
-        
-        # olpair chceck - development in progress
-        if _try_olpair:
-            olpair_data = _session.get('https://olpair.com/')
-            olpair_search = re.search(".*<script>.*function reqDone.*\}else\{[\s+]*display(\w+)\(\);.*\$\.ajax.*</script>.*", olpair_data.text, re.DOTALL)
-            olpair_state = olpair_search.group(1)
-            if 'Paired' == olpair_state:
-                pass #everything should be ok
-            elif 'Form' == olpair_state:
-                open_browser('https://olpair.com/')
-    elif vh == 'streamango.com':
-        path = 'https://streamango.com/embed/' + code
-        subtitles.extend(get_track_subtitles(path))
+    if vh == 'netu.tv':
+        path = 'https://hqq.tv/player/embed_player.php?vid=' + code + '&autoplay=no'
     elif vh == 'verystream.com':
         path = 'https://verystream.com/e/' + code
         subtitles.extend(get_track_subtitles(path, 'https://verystream.com'))
+    
     elif vh == 'mixdrop.co':
         #self resolve!
+        def processData(data, attr, current):
+            prefix = 'MDCore.'+attr+'="'
+            value = current
+            if data.startswith(prefix):
+                value = data[len(prefix):-1]
+                if value.startswith('//'):
+                    value = 'https:' + value
+            return value
+
         embed = 'https://mixdrop.co/e/' + code
         embed_data = _session.get(embed, headers={'Referer': 'http://www.bombuj.tv/prehravace/mixdrop.co.php?url='+url+'&id78=12025'})
-        pathmatch = re.findall('MDCore.vsrc = "([^"]*)";', embed_data.text)
-        if len(pathmatch) == 1:
+        #print embed_data.text
+        packed = re.findall('<script>\s+MDCore.ref = "' + code + '";\s+([^\n]+)\s+</script>', embed_data.text, re.MULTILINE)
+        #print packed
+        if len(packed) == 1:
+            s = packed[0]
+            #print s
+            js = eval('unpack' + s[s.find('}(')+1:-1])
+            #print js
+            mdcore = js.split(';')
+            sub = None
+            referrer = None
+            for data in mdcore:
+                if data.startswith('MDCore.vsrc="'):
+                    path = processData(data, 'vsrc', path)
+                    sub = processData(data, 'remotesub', sub)
+                    referrer = processData(data, 'referrer', referrer)
+            if sub is not None:
+                subtitles.append(sub)
+            if referrer is not None:
+                path = path + '|Referer=' + referrer
             resolved = True
-            path = pathmatch[0]
-            if not path.startswith('http') and path.startswith('//'):
-                path = 'https:' + path
-            submatch = re.findall('MDCore.sub = "([^"]*)";', embed_data.text)
-            if len(submatch) > 0: #more?
-                sub = submatch[0]
-                if not sub.startswith('http') and sub.startswith('//'):
-                    sub = 'https:' + sub
-                subtitles = [sub]
-            else:
-                embed_data = _session.get('http://www.bombuj.tv/prehravace/mixdrop.co.php?url='+url+'&id78=12485', headers={'Referer': 'http://www.bombuj.tv/prehravace/overeniecaptcha3final.php?id78=12485&url='+url+'&vip=&vh=mixdrop.co'})
-                submatch = re.findall('data-src="([^"]*)"', embed_data.text)
-                if len(submatch) > 0: #more?
-                    sub = submatch[0]
-                    embed_data = _session.get('http://www.bombuj.tv/prehravace/check.php?user='+sub, headers={'Referer': 'http://www.bombuj.tv/prehravace/mixdrop.co.php?url='+url+'&id78=12485'}, allow_redirects=False)
-                    if embed_data.status_code > 300 and embed_data.status_code < 400:
-                        real = embed_data.headers['Location']
-                        real = real.split('?')
-                        #path = real[0]
-                        if len(real) > 1:
-                            params = dict(parse_qsl(real[1]))
-                            if 'sub' in params:
-                                subtitles.append(params['sub'])
+        else:
+            xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
 
 
-
-                
-    elif vh == 'exashare.com' or vh == 'netu.tv':
+    elif vh in ['exashare.com','openload.io','streamango.com']:
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
         
     else:
@@ -669,8 +707,10 @@ def play_stream(code,vh,url,iid):
         resolved_url = path if resolved else resolveurl.resolve(path)
         if resolved_url:
             listitem = xbmcgui.ListItem(path=resolved_url)
+            print resolved_url
             if subtitles:
                 listitem.setSubtitles(subtitles)
+                print subtitles
             xbmcplugin.setResolvedUrl(_handle, True, listitem)
         else:
             xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30011), str(e))
@@ -681,49 +721,6 @@ def play_stream(code,vh,url,iid):
         xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30008), str(e))
         xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
         
-def open_browser(url):
-    if (webbrowser.open(url, new=1, autoraise=True)):
-        pass
-    else:
-        osWin = xbmc.getCondVisibility('System.Platform.Windows')
-        osWinUWP = xbmc.getCondVisibility('System.Platform.UWP')
-        osOsx = xbmc.getCondVisibility('System.Platform.OSX')
-        osIos = xbmc.getCondVisibility('System.Platform.IOS')
-        osDarwin = xbmc.getCondVisibility('System.Platform.Darwin')
-        osLinux = xbmc.getCondVisibility('System.Platform.Linux')
-        osRpi = xbmc.getCondVisibility('System.Platform.Linux.RaspberryPi')
-        osAndroid = xbmc.getCondVisibility('System.Platform.Android')
-        
-        if osOsx or osIos or osDarwin:
-            try:
-                xbmc.executebuiltin('System.Exec(open ' + url + ')')
-            except:
-                pass
-        elif osWin or osWinUWP:
-            try:
-                xbmc.executebuiltin('System.Exec(cmd.exe /c start ' + url + ')')
-            except:
-                pass
-        elif osLinux and not osAndroid:
-            try:
-                xbmc.executebuiltin('System.Exec(xdg-open ' + url + ')')
-            except:
-                try:
-                    xbmc.executebuiltin('RunAddon(browser.chrome, ' + url + ')')
-                except:
-                    pass
-        elif osAndroid:
-            try:
-                xbmc.executebuiltin('StartAndroidActivity(com.android.browser,android.intent.action.VIEW,,' + url + ')')
-            except:
-                try:
-                    xbmc.executebuiltin('StartAndroidActivity(com.android.chrome,,,' + url + ')')
-                except:
-                    try:
-                        xbmc.executebuiltin('StartAndroidActivity(org.mozilla.firefox,android.intent.action.VIEW,,' + url + ')')
-                    except:
-                        pass
-
 def router(paramstring):
     params = dict(parse_qsl(paramstring))
     if params:
@@ -763,7 +760,7 @@ def router(paramstring):
         elif params['action'] == 'series_episodes':
             list_series_episodes(params['serie'],params['url'],params['iid'])
         elif params['action'] == 'play':
-            play_stream(params['code'],params['vh'],params['url'],params['iid'])
+            play_stream(params['code'],params['vh'],params['url'],params['iid'],params['tit'])
         else:
             raise ValueError('Invalid paramstring: {0}!'.format(paramstring))
     else:
