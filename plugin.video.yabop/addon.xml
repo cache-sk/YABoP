@@ -11,7 +11,7 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <summary>Yet Another BOmbuj Plugin</summary>
-        <description lang="en">Simulation of the browser, or android application, site bombuj.tv</description>
+        <description lang="en">Simulation of bombuj.tv browser, or android app</description>
         <description lang="sk">Simulácia prehliadača, resp. android aplikácie, stránky bombuj.tv</description>
         <description lang="cs">Simulace prohlížeče, resp. android aplikace, stránky bombuj.tv</description>
         <disclaimer lang="en">The plugin does not provide any content, it is only a simulation of the browser of a publicly available web site or android app. I am not responsible for the content provided by this site.</disclaimer>
