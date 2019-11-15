@@ -20,7 +20,7 @@ import os
 import traceback
 import re
 import unidecode
-import string
+import resolvers
 
 _url = sys.argv[0]
 _handle = int(sys.argv[1])
@@ -558,49 +558,6 @@ def get_track_subtitles(path, referer = None):
         traceback.print_exc()
     return subtitles
 
-# thanks to https://stackoverflow.com/a/2267446
-def int2base(x, base):
-    digs = string.digits + string.ascii_letters
-    if x < 0:
-        sign = -1
-    elif x == 0:
-        return digs[0]
-    else:
-        sign = 1
-
-    x *= sign
-    digits = []
-
-    while x:
-        digits.append(digs[int(x % base)])
-        x = int(x / base)
-
-    if sign < 0:
-        digits.append('-')
-
-    digits.reverse()
-
-    return ''.join(digits)
-
-# thanks to https://stackoverflow.com/a/5995122
-def unpack(p, a, c, k, e=None, d=None):
-    ''' unpack
-    Unpacker for the popular Javascript compression algorithm.
-
-    @param  p  template code
-    @param  a  radix for variables in p
-    @param  c  number of variables in p
-    @param  k  list of c variable substitutions
-    @param  e  not used
-    @param  d  not used
-    @return p  decompressed string
-    '''
-    # Paul Koppen, 2011
-    for i in xrange(c-1,-1,-1):
-        if k[i]:
-            p = re.sub('\\b'+int2base(i,a)+'\\b', k[i], p)
-    return p
-
 def play_stream(code,vh,url,iid,tit):
     path = ''
     subtitles = []
@@ -620,13 +577,7 @@ def play_stream(code,vh,url,iid,tit):
                 provider = episodes_stream_data[0][0]
                 stream_data = episodes_stream_data[0][1].split(';')
                 print stream_data
-                if 'openload' in stream_data[1] or 'openload' in provider:
-                    vh = 'openload.io'
-                elif 'verystream' in stream_data[1] or 'verystream' in provider:
-                    vh = 'verystream.com'
-                elif 'streamango' in stream_data[1] or 'streamango' in provider:
-                    vh = 'streamango.com'
-                elif 'hqq' in stream_data[1] or 'hqq' in provider or 'netu' in stream_data[1] or 'netu' in provider:
+                if 'hqq' in stream_data[1] or 'hqq' in provider or 'netu' in stream_data[1] or 'netu' in provider:
                     vh = 'netu.tv'
 
                 try: #provider was detected, try subtitles
@@ -651,49 +602,19 @@ def play_stream(code,vh,url,iid,tit):
             return
     if vh == 'netu.tv':
         path = 'https://hqq.tv/player/embed_player.php?vid=' + code + '&autoplay=no'
-    elif vh == 'verystream.com':
-        path = 'https://verystream.com/e/' + code
-        subtitles.extend(get_track_subtitles(path, 'https://verystream.com'))
-    
+        data = resolvers.resolve_netu(code)
+        path = data['path'] + '|' + urlencode(data['headers'])
+        resolved = True
     elif vh == 'mixdrop.co':
-        #self resolve!
-        def processData(data, attr, current):
-            prefix = 'MDCore.'+attr+'="'
-            value = current
-            if data.startswith(prefix):
-                value = data[len(prefix):-1]
-                if value.startswith('//'):
-                    value = 'https:' + value
-            return value
-
-        embed = 'https://mixdrop.co/e/' + code
-        embed_data = _session.get(embed, headers={'Referer': 'http://www.bombuj.tv/prehravace/mixdrop.co.php?url='+url+'&id78=12025'})
-        #print embed_data.text
-        packed = re.findall('<script>\s+MDCore.ref = "' + code + '";\s+([^\n]+)\s+</script>', embed_data.text, re.MULTILINE)
-        #print packed
-        if len(packed) == 1:
-            s = packed[0]
-            #print s
-            js = eval('unpack' + s[s.find('}(')+1:-1])
-            #print js
-            mdcore = js.split(';')
-            sub = None
-            referrer = None
-            for data in mdcore:
-                if data.startswith('MDCore.vsrc="'):
-                    path = processData(data, 'vsrc', path)
-                    sub = processData(data, 'remotesub', sub)
-                    referrer = processData(data, 'referrer', referrer)
-            if sub is not None:
-                subtitles.append(sub)
-            if referrer is not None:
-                path = path + '|Referer=' + referrer
+        data = resolvers.resolve_mixdrop(code, url)
+        if data is not None:
+            path = data['path']
             resolved = True
+            if 'sub' in data:
+                subtitles.append(data['sub'])
         else:
             xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
-
-
-    elif vh in ['exashare.com','openload.io','streamango.com']:
+    elif vh in ['exashare.com','openload.io','streamango.com', 'verystream.com']:
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
         
     else:
