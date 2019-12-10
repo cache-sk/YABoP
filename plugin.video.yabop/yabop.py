@@ -537,7 +537,12 @@ def list_series_episodes(serie,url,iid):
                                     'genre': series['zaner']})
         list_item.setArt({'thumb': COVERS_SERIES + series['url'] + '.jpg'})
         list_item.setProperty('IsPlayable', 'true')
-        link = get_url(action='play', code=episode['code'], vh='bombuj_episode', url=url, iid=iid, tit='none')
+        vh = 'bombuj_episode-'
+        try:
+            vh = vh + str(int(serie)) + 'x' + str(int(episode['cislo_epizody']))
+        except:
+            pass
+        link = get_url(action='play', code=episode['code'], vh=vh, url=url, iid=iid, tit='none')
         is_folder = False
         xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
     xbmcplugin.endOfDirectory(_handle)
@@ -562,11 +567,15 @@ def play_stream(code,vh,url,iid,tit):
     path = ''
     subtitles = []
     resolved = False
+    mime = None
+
+
 
     if tit != 'none':
         subtitles.append('https://www.bombuj.tv/titulky/'+tit)
 
-    if vh == 'bombuj_episode': #additional data for episode is required
+    if 'bombuj_episode' in vh: #additional data for episode is required
+        epcode=vh[14:]
         vh = ''
         episodes_additional_data = _session.get(BOMBUJ_API + 'web/serialplay.php?id=' + iid, headers=HEADERS)
         code_safe = re.escape(code)
@@ -579,6 +588,8 @@ def play_stream(code,vh,url,iid,tit):
                 print stream_data
                 if 'hqq' in stream_data[1] or 'hqq' in provider or 'netu' in stream_data[1] or 'netu' in provider:
                     vh = 'netu.tv'
+                elif 'mixdrop' in stream_data[1]:
+                    vh = 'mixdrop.co'
 
                 try: #provider was detected, try subtitles
                     if len(stream_data[0]) > 0:
@@ -595,17 +606,26 @@ def play_stream(code,vh,url,iid,tit):
             except:
                 pass
 
+        
+        print subtitles
+        if not subtitles:
+            #este tento pokus
+            subtitles.append('http://serialy.bombuj.tv/titulky/'+url+epcode+'.vtt')
 
         if vh == '':
             xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
             xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
             return
     if vh == 'netu.tv':
-        path = 'https://hqq.tv/player/embed_player.php?vid=' + code + '&autoplay=no'
-        data = resolvers.resolve_netu(code)
-        path = data['path'] + '|' + urlencode(data['headers'])
-        resolved = True
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30011), 'netu.tv - Google reCAPTCHA v3')
+        #path = 'https://hqq.tv/player/embed_player.php?vid=' + code + '&autoplay=no'
+        #data = resolvers.resolve_netu(code)
+        #path = data['path'] + '|' + urlencode(data['headers'])
+        #resolved = True
+        #mime = 'application/octet-stream-m3u8' #application/vnd.apple.mpegurl
     elif vh == 'mixdrop.co':
+        #path = 'https://mixdrop.co/e/' + code
+        
         data = resolvers.resolve_mixdrop(code, url)
         if data is not None:
             path = data['path']
@@ -614,9 +634,9 @@ def play_stream(code,vh,url,iid,tit):
                 subtitles.append(data['sub'])
         else:
             xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
+        
     elif vh in ['exashare.com','openload.io','streamango.com', 'verystream.com']:
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
-        
     else:
         xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
     
@@ -632,6 +652,9 @@ def play_stream(code,vh,url,iid,tit):
             if subtitles:
                 listitem.setSubtitles(subtitles)
                 print subtitles
+            if mime is not None:
+                listitem.setMimeType(mime)
+                print "#note - added mime type "+mime
             xbmcplugin.setResolvedUrl(_handle, True, listitem)
         else:
             xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30011), str(e))

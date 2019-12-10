@@ -18,6 +18,8 @@ def resolve_mixdrop(code, url, default_headers={}):
         value = current
         if data.startswith(prefix):
             value = data[len(prefix):-1]
+            while '"' in value:
+                value = value[1:]
             if value.startswith('//'):
                 value = 'https:' + value
         return value
@@ -33,19 +35,23 @@ def resolve_mixdrop(code, url, default_headers={}):
     embed_data = session.get(embed, headers=headers)
 
     packed = re.findall('<script>\s+MDCore.ref = "' + code + '";\s+([^\n]+)\s+</script>', embed_data.text, re.MULTILINE)
-
     if len(packed) == 1:
         s = packed[0]
+        print s
         js = eval('unpack' + s[s.find('}(')+1:-1])
+        print js
         mdcore = js.split(';')
+        print mdcore
         sub = None
-        referrer = None
+        referrer = embed
         path = ''
         for data in mdcore:
-            if data.startswith('MDCore.vsrc="'):
-                path = processData(data, 'vsrc', path)
+            if data.startswith('MDCore.vsr'):
+                path = processData(data, 'vsr', path)
+            elif data.startswith('MDCore.remotesub="'):
                 sub = processData(data, 'remotesub', sub)
-                referrer = processData(data, 'referrer', referrer)
+            #elif data.startswith('MDCore.referrer="'):
+                #referrer = processData(data, 'referrer', referrer)
 
         result = {}
         if sub is not None:
@@ -72,8 +78,10 @@ def resolve_netu(code, default_headers={}):
     response = session.get(path, headers=headers)
 
     cookie_obj = requests.cookies.create_cookie(domain='hqq.tv',name='bg6936066c1d4c2d5b4413428651de8ebf',value='0')
+    #cookie_obj = requests.cookies.create_cookie(domain='hqq.tv',name='bg6936066c1d4c2d5b4413428651de8ebf',value='0')
     session.cookies.set_cookie(cookie_obj)
-    cookie_obj = requests.cookies.create_cookie(domain='hqq.tv',name='gt',value='796b0214ed51730ef6f4d632e227ef05')
+    #cookie_obj = requests.cookies.create_cookie(domain='hqq.tv',name='gt',value='796b0214ed51730ef6f4d632e227ef05')
+    cookie_obj = requests.cookies.create_cookie(domain='hqq.tv',name='gt',value='36062398b0b97567587f60df5bda1363')
     session.cookies.set_cookie(cookie_obj)
 
     #TODO parse out url for wise
@@ -103,11 +111,9 @@ def resolve_netu(code, default_headers={}):
 
 #https://hqq.tv/player/get_md5.php?ver=3&secure=0&adb=0%2F&v=eGhmdkZhMkdadFdGYTNFUWVtTEcxQT09&token=03AOLTBLQ0ol1eVuJLMrDgKCcb2YAgeWmiX7eTjy8riITPF7s5-EZ5RU3qVVnYgiJrTo4gLkjoCPtQZ62-OPmMes5qnyDt8aj-4BKghRnphfokpUg1f4UqJLWc4u-f95r0skfj4IpaH4DXgshw3ksEaFjBuGe6TsywlpJyLkzuytgXfh6KMM-4BdU_RwRH5EH3awqo8249aOuLtYYiSgtPMVtUy9gQjh0cxiDTb2O64ufpka7ogLck7SVQle6eNdTg1PZzwrT_ExJH_IUaE9t_1bVPunU92XAUs2Ik_QUzVtwaSxSN8eE9VSrps1se-L_mcozabMvG7eXHcBPWqRPhdtf3vjotCYuR2vlwvy2ErUh8SezJ09qtP78M91UD_SpZjHmNxPPqDLfwFvb89mFFZSUwg0qOnARsRaRMk_JbQrvw53a23DJuheSuu9RLisqVonxYCPO7vIFpkeVAyBVYdXKa7ibchQXwfS4ACijsKOcVid_DwNJN0Qzd-LNDN4977QaCIPLlN2Yk&gt=
 
-    md5url = "https://hqq.tv/player/get_md5.php?ver=2&secure=0&adb=0%2F&v=" + code + "&token=&gt="
-    response = session.get(md5url, headers=headers)
-    print response.text
     md5url = "https://hqq.tv/player/get_md5.php?ver=3&secure=0&adb=0%2F&v=" + code + "&token=&gt="
     response = session.get(md5url, headers=headers)
+    print response.text
     data = response.json()
     media_url = "https:" + tb(data["obf_link"][1:])
     del headers['X-Requested-With']
