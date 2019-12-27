@@ -14,7 +14,7 @@ HEADERS={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/53
 
 def resolve_mixdrop(code, url, default_headers={}):
     def processData(data, attr, current):
-        prefix = 'MDCore.'+attr+'="'
+        prefix = 'MDCore.'+attr
         value = current
         if data.startswith(prefix):
             value = data[len(prefix):-1]
