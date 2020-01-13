@@ -48,6 +48,8 @@ def resolve_mixdrop(code, url, default_headers={}):
         for data in mdcore:
             if data.startswith('MDCore.vsr'):
                 path = processData(data, 'vsr', path)
+            elif data.startswith('MDCore.furl'):
+            	path = processData(data, 'furl', path)
             elif data.startswith('MDCore.remotesub="'):
                 sub = processData(data, 'remotesub', sub)
             #elif data.startswith('MDCore.referrer="'):
