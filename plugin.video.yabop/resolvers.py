@@ -14,10 +14,11 @@ HEADERS={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/53
 
 def resolve_mixdrop(code, url, default_headers={}):
     def processData(data, attr, current):
-        prefix = 'MDCore.'+attr
+        if not attr.startswith('MDCore'):
+            attr = 'MDCore.'+attr
         value = current
-        if data.startswith(prefix):
-            value = data[len(prefix):-1]
+        if data.startswith(attr):
+            value = data[len(attr):-1]
             while '"' in value:
                 value = value[1:]
             if value.startswith('//'):
@@ -45,15 +46,21 @@ def resolve_mixdrop(code, url, default_headers={}):
         sub = None
         referrer = embed
         path = ''
+        notVideo = ['MDCore.poster','MDCore.vfile','MDCore.vserver','MDCore.remotesub','MDCore.chromeInject','MDCore.referrer']
         for data in mdcore:
-            if data.startswith('MDCore.vsr'):
-                path = processData(data, 'vsr', path)
-            elif data.startswith('MDCore.furl'):
-            	path = processData(data, 'furl', path)
-            elif data.startswith('MDCore.remotesub="'):
-                sub = processData(data, 'remotesub', sub)
-            #elif data.startswith('MDCore.referrer="'):
-                #referrer = processData(data, 'referrer', referrer)
+            keyvalue = data.split('=');
+            if len(keyvalue) > 2:
+                print keyvalue
+                if keyvalue[0] in notVideo:
+                    if data.startswith('MDCore.remotesub="'):
+                        sub = processData(data, 'MDCore.remotesub', sub)
+                    #elif data.startswith('MDCore.referrer="'):
+                        #referrer = processData(data, 'MDCore.referrer', referrer)
+                else:
+                    value = processData(data, keyvalue[0], path)
+                    print value
+                    if len(value) > len(path):
+                        path = value
 
         result = {}
         if sub is not None:
