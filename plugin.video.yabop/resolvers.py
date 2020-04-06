@@ -35,9 +35,15 @@ def resolve_mixdrop(code, url, default_headers={}):
     embed = 'https://mixdrop.co/e/' + code
     embed_data = session.get(embed, headers=headers)
 
-    packed = re.findall('<script>\s+MDCore.ref = "' + code + '";\s+([^\n]+)\s+</script>', embed_data.text, re.MULTILINE)
-    if len(packed) == 1:
-        s = packed[0]
+    #print embed_data.text
+
+    #packed = re.findall('<script>\s+MDCore.ref = "' + code + '";\s+([^\n]+)\s+</script>', embed_data.text, re.MULTILINE)
+    packed = re.findall('eval\(function\(p,a,c,k,e,d\)\{(.*),0,\{\}\)\)', embed_data.text, re.MULTILINE)
+    #print packed
+    #for p in packed:
+    #    print p
+    if len(packed) > 0:
+        s = 'eval(function(p,a,c,k,e,d){' + packed[0] + ',0,{}))'
         print s
         js = eval('unpack' + s[s.find('}(')+1:-1])
         print js
