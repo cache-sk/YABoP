@@ -32,13 +32,23 @@ def resolve_mixdrop(code, url, default_headers={}):
     session = requests.Session()
 
     headers.update({'Referer': 'http://www.bombuj.tv/prehravace/mixdrop.co.php?url='+url+'&id78=12025'})
-    embed = 'https://mixdrop.co/e/' + code
-    embed_data = session.get(embed, headers=headers)
+    embed0 = 'https://mixdrop.co/e/' + code
+    embed0_data = session.get(embed0, headers=headers).text
+    #print embed0_data
+    if '<script>window.location = "' in embed0_data and '";</script>' in embed0_data:
+        #<script>window.location = "/e/1vvqgq39ik8gmrn?k=f9892ffd86486814f9b23b0b536d80ba&t=1596403666&referrer=http%3A%2F%2Fwww.bombuj.tv%2Fprehravace%2Fmixdrop.co.php%3Furl%3Dagentka-v-utajeni-2019%26id78%3D12025";</script>
+        embed0_data = embed0_data.replace('<script>window.location = "','')
+        embed0_data = embed0_data.replace('";</script>','')
+        embed = 'https://mixdrop.co' + embed0_data
+        #print embed
+        embed_data = session.get(embed, headers=headers).text
+    else:
+        embed_data = embed0_data
 
-    #print embed_data.text
+    #print embed_data
 
     #packed = re.findall('<script>\s+MDCore.ref = "' + code + '";\s+([^\n]+)\s+</script>', embed_data.text, re.MULTILINE)
-    packed = re.findall('eval\(function\(p,a,c,k,e,d\)\{(.*),0,\{\}\)\)', embed_data.text, re.MULTILINE)
+    packed = re.findall('eval\(function\(p,a,c,k,e,d\)\{(.*),0,\{\}\)\)', embed_data, re.MULTILINE)
     #print packed
     #for p in packed:
     #    print p
