@@ -5,7 +5,7 @@
 # License: AGPL v.3 https://www.gnu.org/licenses/agpl-3.0.html
 
 import sys
-from urllib import urlencode
+from urllib import urlencode, quote_plus
 from urlparse import parse_qsl
 import xbmc
 import xbmcgui
@@ -617,23 +617,26 @@ def play_stream(code,vh,url,iid,tit):
             xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
             return
     if vh == 'netu.tv':
+        ipath = 'https://hqq.tv/player/embed_player.php?vid=' + code + '&autoplay=no'
+        #command = "System.Exec(cmd.exe /c start microsoft-edge:http://p.xf.cz/iframe.php?url=" + quote_plus(ipath) + ")"
+        command = "System.Exec(\"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe\" --kiosk http://p.xf.cz/iframe.php?url=" + quote_plus(ipath) + ")"
+        xbmc.executebuiltin(command, True)
         xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30011), 'netu.tv - Google reCAPTCHA v3')
-        #path = 'https://hqq.tv/player/embed_player.php?vid=' + code + '&autoplay=no'
         #data = resolvers.resolve_netu(code)
         #path = data['path'] + '|' + urlencode(data['headers'])
         #resolved = True
         #mime = 'application/octet-stream-m3u8' #application/vnd.apple.mpegurl
     elif vh == 'mixdrop.co':
-        #path = 'https://mixdrop.co/e/' + code
-        
-        data = resolvers.resolve_mixdrop(code, url)
-        if data is not None:
-            path = data['path']
-            resolved = True
-            if 'sub' in data:
-                subtitles.append(data['sub'])
-        else:
-            xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
+        path = 'https://mixdrop.co/e/' + code
+#        
+#        data = resolvers.resolve_mixdrop(code, url)
+#        if data is not None:
+#            path = data['path']
+#            resolved = True
+#            if 'sub' in data:
+#                subtitles.append(data['sub'])
+#        else:
+#            xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
         
     elif vh in ['exashare.com','openload.io','streamango.com', 'verystream.com']:
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
