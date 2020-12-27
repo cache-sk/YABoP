@@ -4,7 +4,7 @@
 
 ## Kodi Video Plugin / YABoP
 
-Plugin prehrá obsah z Bombuj.tv.
+Plugin prehrá obsah z Bombuj.si.
 
 Používa na to android api, ktoré používa aj oficiálna [android aplikácia](https://play.google.com/store/apps/details?id=com.tosi.bombujmanual).  
 

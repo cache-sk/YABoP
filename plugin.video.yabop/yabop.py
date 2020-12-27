@@ -31,11 +31,11 @@ _profile = xbmc.translatePath( _addon.getAddonInfo('profile')).decode("utf-8")
 
 CACHED_DATA_MAX_AGE = 14400 #4h default
 
-BOMBUJ_API = 'http://www.bombuj.tv/android_api/'
+BOMBUJ_API = 'http://www.bombuj.si/android_api/'
 HEADERS={'User-Agent': 'android', 'Referer': BOMBUJ_API}
-COVERS_MOVIES = 'http://www.bombuj.tv/images/covers/all/'
-COVERS_SERIES = 'http://serialy.bombuj.tv/images/covers/'
-SERIES_SUBTITLES = 'http://serialy.bombuj.tv/tit/'
+COVERS_MOVIES = 'http://www.bombuj.si/images/covers/all/'
+COVERS_SERIES = 'http://serialy.bombuj.si/images/covers/'
+SERIES_SUBTITLES = 'http://serialy.bombuj.si/tit/'
 SERIES_SUBTITLES_FAKE = 'http://b.6f.sk/'
 
 CTYPES = [{'type':'movies','msg':_addon.getLocalizedString(30101), 'icon':'DefaultMovies.png'},
@@ -572,7 +572,7 @@ def play_stream(code,vh,url,iid,tit):
 
 
     if tit != 'none':
-        subtitles.append('https://www.bombuj.tv/titulky/'+tit)
+        subtitles.append('https://www.bombuj.si/titulky/'+tit)
 
     if 'bombuj_episode' in vh: #additional data for episode is required
         epcode=vh[14:]
@@ -610,7 +610,7 @@ def play_stream(code,vh,url,iid,tit):
         print subtitles
         if not subtitles:
             #este tento pokus
-            subtitles.append('http://serialy.bombuj.tv/titulky/'+url+epcode+'.vtt')
+            subtitles.append('http://serialy.bombuj.si/titulky/'+url+epcode+'.vtt')
 
         if vh == '':
             xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
