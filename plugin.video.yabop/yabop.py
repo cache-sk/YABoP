@@ -638,6 +638,8 @@ def play_stream(code,vh,url,iid,tit):
 #        else:
 #            xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
         
+    elif vh == 'streamtape.com':
+        path = 'https://streamtape.com/e/' + code
     elif vh in ['exashare.com','openload.io','streamango.com', 'verystream.com']:
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
     else:
