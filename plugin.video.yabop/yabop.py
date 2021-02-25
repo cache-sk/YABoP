@@ -5,8 +5,6 @@
 # License: AGPL v.3 https://www.gnu.org/licenses/agpl-3.0.html
 
 import sys
-from urllib import urlencode, quote_plus
-from urlparse import parse_qsl
 import xbmc
 import xbmcgui
 import xbmcplugin
@@ -20,14 +18,24 @@ import os
 import traceback
 import re
 import unidecode
-import resolvers
+
+try:
+    from urllib import urlencode, quote_plus
+    from urlparse import parse_qsl, urlparse
+except ImportError:
+    from urllib.parse import urlencode, quote_plus
+    from urllib.parse import parse_qsl, urlparse
 
 _url = sys.argv[0]
 _handle = int(sys.argv[1])
 
 _addon = xbmcaddon.Addon()
 _session = requests.Session()
-_profile = xbmc.translatePath( _addon.getAddonInfo('profile')).decode("utf-8")
+_profile = xbmc.translatePath( _addon.getAddonInfo('profile'))
+try:
+    _profile = _profile.decode('utf-8')
+except:
+    pass
 
 CACHED_DATA_MAX_AGE = 14400 #4h default
 
@@ -116,7 +124,7 @@ def get_cached_or_load(name, url):
                 last_data = file.read()
                 file.close()
         except Exception as e:
-            xbmc.log('Can\'t load ' + name + '_last_data\n'+str(e),level=xbmc.LOGNOTICE)
+            xbmc.log('Can\'t load ' + name + '_last_data\n'+str(e),level=xbmc.LOGINFO)
             traceback.print_exc()
     
     if last_data != '': # there are some stored data
@@ -127,9 +135,12 @@ def get_cached_or_load(name, url):
                 with io.open(os.path.join(_profile, name + "_data"), 'r', encoding='utf8') as file:
                     fdata = file.read()
                     file.close()
-                    data = json.loads(fdata, "utf-8")
+                    try:
+                        data = json.loads(fdata, "utf-8")
+                    except TypeError:
+                        data = json.loads(fdata)
         except Exception as e:
-            xbmc.log('Old data is there (' + last_data + '), but can\'t be loaded..\n'+str(e),level=xbmc.LOGNOTICE)
+            xbmc.log('Old data is there (' + last_data + '), but can\'t be loaded..\n'+str(e),level=xbmc.LOGINFO)
             traceback.print_exc()
             already_tried = True
     
@@ -137,16 +148,23 @@ def get_cached_or_load(name, url):
         try:
             current = time.time()
             wdata = _session.get(url, headers=HEADERS)
-            data = json.loads(wdata.text, "utf-8")
+            try:
+                data = json.loads(wdata.text, "utf-8")
+            except TypeError:
+                data = json.loads(wdata.text)
             if _cacheing:
                 with io.open(os.path.join(_profile, name + "_data"), 'w', encoding='utf8') as file:
-                    file.write(json.dumps(data).decode('utf8'))
+                    try:
+                        dump = json.dumps(data).decode('utf8')
+                    except AttributeError:
+                        dump = json.dumps(data)
+                    file.write(dump)
                     file.close()
                 with io.open(os.path.join(_profile, name + "_last_data"), 'w', encoding='utf8') as file:
                     file.write(str(current).decode('utf-8'))
                     file.close()
         except Exception as e:
-            xbmc.log('Can\'t load or store data from bombuj\n'+str(e),level=xbmc.LOGNOTICE)
+            xbmc.log('Can\'t load or store data from bombuj\n'+str(e),level=xbmc.LOGINFO)
             traceback.print_exc()
     
     if not data and last_data != '' and not already_tried and _cacheing: # there are some not fresh stored data, but couldn't load new ones
@@ -154,9 +172,12 @@ def get_cached_or_load(name, url):
             with io.open(os.path.join(_profile, name + "_data"), 'r', encoding='utf8') as file:
                 fdata = file.read()
                 file.close()
-                data = json.loads(fdata, "utf-8")
+                try:
+                    data = json.loads(fdata, "utf-8")
+                except TypeError:
+                    data = json.loads(fdata)
         except Exception as e:
-            xbmc.log('Old data is there (' + last_data + '), but can\'t be loaded..\n'+str(e),level=xbmc.LOGNOTICE)
+            xbmc.log('Old data is there (' + last_data + '), but can\'t be loaded..\n'+str(e),level=xbmc.LOGINFO)
             traceback.print_exc()
     return data
 
@@ -173,7 +194,7 @@ def get_search_data(ctype, isSeries):
             else:
                 search_data = data['results']
         except Exception as e:
-            xbmc.log('Can\'t process data from bombuj\n'+str(e),level=xbmc.LOGNOTICE)
+            xbmc.log('Can\'t process data from bombuj\n'+str(e),level=xbmc.LOGINFO)
             traceback.print_exc()
     return search_data
 
@@ -249,7 +270,7 @@ def list_search(ctype):
     #xbmcplugin.setContent(_handle, 'videos')
     data = get_search_data(ctype,isSeries)
     if not data:
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006), _addon.getLocalizedString(30009))
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006) + "\n" + _addon.getLocalizedString(30009))
         xbmcplugin.endOfDirectory(_handle)
         return
     
@@ -323,9 +344,9 @@ def list_movies(category,listt,page=0):
         loaded = get_cached_or_load('list_movies_' + listt + '_' + catFN + '_' + _list_type, BOMBUJ_API + 'filmy/get_items_as_json.php?type=' + listt + '&zaner=' + category + '&sort=' + _list_type)
         movies = loaded[listt]
     except Exception as e:
-        xbmc.log(str(e),level=xbmc.LOGNOTICE)
+        xbmc.log(str(e),level=xbmc.LOGINFO)
         traceback.print_exc()
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006), _addon.getLocalizedString(30009), str(e))
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006) + "\n" + _addon.getLocalizedString(30009) + "\n" + str(e))
         xbmcplugin.endOfDirectory(_handle)
         return
 
@@ -360,7 +381,10 @@ def list_movies(category,listt,page=0):
 
 def get_movie_info(iid):
     movie_data = _session.get(BOMBUJ_API + 'filmy/getfilmjson.php?id=' + iid + '', headers=HEADERS)
-    movie_loaded = json.loads(movie_data.text, "utf-8")
+    try:
+        movie_loaded = json.loads(movie_data.text, "utf-8")
+    except TypeError:
+        movie_loaded = json.loads(movie_data.text)
     movie = movie_loaded['film'][0]
     return movie
     
@@ -370,9 +394,9 @@ def list_searched_movie_streams(iid):
     except Exception as e:
         xbmcplugin.setPluginCategory(_handle, _addon.getLocalizedString(30003))
         #xbmcplugin.setContent(_handle, 'videos')
-        xbmc.log(str(e),level=xbmc.LOGNOTICE)
+        xbmc.log(str(e),level=xbmc.LOGINFO)
         traceback.print_exc()
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006), _addon.getLocalizedString(30009), str(e))
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006) + "\n" + _addon.getLocalizedString(30009) + "\n" + str(e))
         xbmcplugin.endOfDirectory(_handle)
         return
     list_movie_streams(movie['url'],iid,movie)
@@ -384,14 +408,17 @@ def list_movie_streams(url,iid,movie):
     
     try:
         streams_data = _session.get(BOMBUJ_API + 'filmy/getlanguagesjson.php?url=' + url + '', headers=HEADERS)
-        streams_loaded = json.loads(streams_data.text, "utf-8")
+        try:
+            streams_loaded = json.loads(streams_data.text, "utf-8")
+        except TypeError:
+            streams_loaded = json.loads(streams_data.text)
         streams = streams_loaded['typ']
         if not movie:
             movie = get_movie_info(iid)
     except Exception as e:
-        xbmc.log(str(e),level=xbmc.LOGNOTICE)
+        xbmc.log(str(e),level=xbmc.LOGINFO)
         traceback.print_exc()
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006), _addon.getLocalizedString(30009), str(e))
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006) + "\n" + _addon.getLocalizedString(30009) + "\n" + str(e))
         xbmcplugin.endOfDirectory(_handle)
         return
         
@@ -429,9 +456,9 @@ def list_series(category,listt,page=0):
         loaded = get_cached_or_load('list_series_' + listt + '_' + catFN, BOMBUJ_API + 'serialy/get_items_as_json.php?type=' + listt + '&zaner=' + category)
         series = loaded[listt]
     except Exception as e:
-        xbmc.log(str(e),level=xbmc.LOGNOTICE)
+        xbmc.log(str(e),level=xbmc.LOGINFO)
         traceback.print_exc()
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006), _addon.getLocalizedString(30009), str(e))
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006) + "\n" + _addon.getLocalizedString(30009) + "\n" + str(e))
         xbmcplugin.endOfDirectory(_handle)
         return
 
@@ -466,7 +493,10 @@ def list_series(category,listt,page=0):
 
 def get_series_info(iid):
     series_data = _session.get(BOMBUJ_API + 'serialy/getserialjson.php?id=' + iid + '', headers=HEADERS)
-    series_loaded = json.loads(series_data.text, "utf-8")
+    try:
+        series_loaded = json.loads(series_data.text, "utf-8")
+    except TypeError:
+        series_loaded = json.loads(series_data.text)
     series = series_loaded['serial'][0]
     return series
 
@@ -476,9 +506,9 @@ def list_searched_series_series(iid):
     except Exception as e:
         xbmcplugin.setPluginCategory(_handle, _addon.getLocalizedString(30106))
         #xbmcplugin.setContent(_handle, 'videos')
-        xbmc.log(str(e),level=xbmc.LOGNOTICE)
+        xbmc.log(str(e),level=xbmc.LOGINFO)
         traceback.print_exc()
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006), _addon.getLocalizedString(30009), str(e))
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006) + "\n" + _addon.getLocalizedString(30009) + "\n" + str(e))
         xbmcplugin.endOfDirectory(_handle)
         return
     list_series_series(series['url'],iid,series)
@@ -490,14 +520,17 @@ def list_series_series(url,iid,series):
     
     try:
         series_series_data = _session.get(BOMBUJ_API + 'serialy/seriejson.php?url=' + url + '', headers=HEADERS)
-        series_series_loaded = json.loads(series_series_data.text, "utf-8")
+        try:
+            series_series_loaded = json.loads(series_series_data.text, "utf-8")
+        except TypeError:
+            series_series_loaded = json.loads(series_series_data.text)
         series_series = series_series_loaded['serie']
         if not series:
             series = get_series_info(iid)
     except Exception as e:
-        xbmc.log(str(e),level=xbmc.LOGNOTICE)
+        xbmc.log(str(e),level=xbmc.LOGINFO)
         traceback.print_exc()
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006), _addon.getLocalizedString(30009), str(e))
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006) + "\n" + _addon.getLocalizedString(30009) + "\n" + str(e))
         xbmcplugin.endOfDirectory(_handle)
         return
         
@@ -520,13 +553,16 @@ def list_series_episodes(serie,url,iid):
     
     try:
         episodes_data = _session.get(BOMBUJ_API + 'serialy/epizodyjson.php?url=' + url + '&seria=' + serie, headers=HEADERS)
-        episodes_loaded = json.loads(episodes_data.text, "utf-8")
+        try:
+            episodes_loaded = json.loads(episodes_data.text, "utf-8")
+        except TypeError:
+            episodes_loaded = json.loads(episodes_data.text)
         episodes = episodes_loaded['epizody']
         series = get_series_info(iid)
     except Exception as e:
-        xbmc.log(str(e),level=xbmc.LOGNOTICE)
+        xbmc.log(str(e),level=xbmc.LOGINFO)
         traceback.print_exc()
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006), _addon.getLocalizedString(30009), str(e))
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30005), _addon.getLocalizedString(30006) + "\n" + _addon.getLocalizedString(30009) + "\n" + str(e))
         xbmcplugin.endOfDirectory(_handle)
         return
         
@@ -559,7 +595,7 @@ def get_track_subtitles(path, referer = None):
                 if src:
                     subtitles.append(src.group(1))
     except Exception as e:
-        xbmc.log(str(e),level=xbmc.LOGNOTICE)
+        xbmc.log(str(e),level=xbmc.LOGINFO)
         traceback.print_exc()
     return subtitles
 
@@ -585,7 +621,6 @@ def play_stream(code,vh,url,iid,tit):
             try: #provider
                 provider = episodes_stream_data[0][0]
                 stream_data = episodes_stream_data[0][1].split(';')
-                print stream_data
                 if 'hqq' in stream_data[1] or 'hqq' in provider or 'netu' in stream_data[1] or 'netu' in provider:
                     vh = 'netu.tv'
                 elif 'mixdrop' in stream_data[1]:
@@ -607,43 +642,24 @@ def play_stream(code,vh,url,iid,tit):
                 pass
 
         
-        print subtitles
         if not subtitles:
             #este tento pokus
             subtitles.append('http://serialy.bombuj.si/titulky/'+url+epcode+'.vtt')
 
         if vh == '':
-            xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
+            xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004) + "\n" + 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
             xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
             return
     if vh == 'netu.tv':
-        ipath = 'https://hqq.tv/player/embed_player.php?vid=' + code + '&autoplay=no'
-        #command = "System.Exec(cmd.exe /c start microsoft-edge:http://p.xf.cz/iframe.php?url=" + quote_plus(ipath) + ")"
-        command = "System.Exec(\"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe\" --kiosk http://p.xf.cz/iframe.php?url=" + quote_plus(ipath) + ")"
-        xbmc.executebuiltin(command, True)
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30011), 'netu.tv - Google reCAPTCHA v3')
-        #data = resolvers.resolve_netu(code)
-        #path = data['path'] + '|' + urlencode(data['headers'])
-        #resolved = True
-        #mime = 'application/octet-stream-m3u8' #application/vnd.apple.mpegurl
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30011) + "\n" + 'netu.tv - Google reCAPTCHA v3')
     elif vh == 'mixdrop.co':
         path = 'https://mixdrop.co/e/' + code
-#        
-#        data = resolvers.resolve_mixdrop(code, url)
-#        if data is not None:
-#            path = data['path']
-#            resolved = True
-#            if 'sub' in data:
-#                subtitles.append(data['sub'])
-#        else:
-#            xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
-        
     elif vh == 'streamtape.com':
         path = 'https://streamtape.com/e/' + code
     elif vh in ['exashare.com','openload.io','streamango.com', 'verystream.com']:
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
     else:
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004), 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30003), _addon.getLocalizedString(30004) + "\n" + 'URL: '+url + ' / ID: '+iid + ' / VH: '+vh)
     
     if path == '':
         xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
@@ -653,21 +669,18 @@ def play_stream(code,vh,url,iid,tit):
         resolved_url = path if resolved else resolveurl.resolve(path)
         if resolved_url:
             listitem = xbmcgui.ListItem(path=resolved_url)
-            print resolved_url
             if subtitles:
                 listitem.setSubtitles(subtitles)
-                print subtitles
             if mime is not None:
                 listitem.setMimeType(mime)
-                print "#note - added mime type "+mime
             xbmcplugin.setResolvedUrl(_handle, True, listitem)
         else:
-            xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30011), str(e))
+            xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30011) + "\n" + str(e))
             xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
     except Exception as e:
-        xbmc.log(str(e),level=xbmc.LOGNOTICE)
+        xbmc.log(str(e),level=xbmc.LOGINFO)
         traceback.print_exc()
-        xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30008), str(e))
+        xbmcgui.Dialog().ok(_addon.getLocalizedString(30000), _addon.getLocalizedString(30008) + "\n" + str(e))
         xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
         
 def router(paramstring):
