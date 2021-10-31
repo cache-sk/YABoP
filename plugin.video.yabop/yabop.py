@@ -407,7 +407,8 @@ def list_movie_streams(url,iid,movie):
     streams = []
     
     try:
-        streams_data = _session.get(BOMBUJ_API + 'filmy/getlanguagesjson.php?url=' + url + '', headers=HEADERS)
+        #streams_data = _session.get(BOMBUJ_API + 'filmy/getlanguagesjson.php?url=' + url + '', headers=HEADERS)
+        streams_data = _session.get(BOMBUJ_API + 'filmy/getlanguagesjsonnew.php?id=' + iid + '', headers=HEADERS)
         try:
             streams_loaded = json.loads(streams_data.text, "utf-8")
         except TypeError:
