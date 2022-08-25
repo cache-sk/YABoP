@@ -657,6 +657,15 @@ def play_stream(code,vh,url,iid,tit):
         path = 'https://mixdrop.co/e/' + code
     elif vh == 'streamtape.com':
         path = 'https://streamtape.com/e/' + code
+    elif vh == 'byteshare.net':
+        path = 'https://byteshare.net/embed/' + code
+        content = _session.get(path)
+        matches = re.search('.+sources: \[{\s+src: "(http[s]?\S+)",\s+}\].+', content.text)
+        stream = matches.group(1)
+        if stream is not None:
+            resolved = True
+            path = stream
+        #else try resolver
     elif vh in ['exashare.com','openload.io','streamango.com', 'verystream.com']:
         xbmcgui.Dialog().ok(vh, _addon.getLocalizedString(30010))
     else:
@@ -667,6 +676,7 @@ def play_stream(code,vh,url,iid,tit):
         return
         
     try:
+        xbmc.log("Trying: "+path,level=xbmc.LOGINFO)
         resolved_url = path if resolved else resolveurl.resolve(path)
         if resolved_url:
             listitem = xbmcgui.ListItem(path=resolved_url)

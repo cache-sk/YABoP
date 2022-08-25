@@ -37,7 +37,7 @@ msgid "Sorry, stream cannot be played at this time.."
 msgstr ""
 
 msgctxt "#30009"
-msgid "Bombuj.eu not responding correctly."
+msgid "Bombuj.si not responding correctly."
 msgstr ""
 
 msgctxt "#30010"

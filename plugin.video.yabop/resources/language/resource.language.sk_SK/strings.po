@@ -37,8 +37,8 @@ msgid "Sorry, stream cannot be played at this time.."
 msgstr "Prepáčte, stream sa práve nedá prehrať.."
 
 msgctxt "#30009"
-msgid "Bombuj.eu not responding correctly."
-msgstr "Bombuj.eu neodpovedá v očakávanom formáte."
+msgid "Bombuj.si not responding correctly."
+msgstr "Bombuj.si neodpovedá v očakávanom formáte."
 
 msgctxt "#30010"
 msgid "Sorry, can't play this stream provider."
