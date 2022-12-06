@@ -26,12 +26,17 @@ except ImportError:
     from urllib.parse import urlencode, quote_plus
     from urllib.parse import parse_qsl, urlparse
 
+try:
+    from xbmc import translatePath
+except ImportError:
+    from xbmcvfs import translatePath
+
 _url = sys.argv[0]
 _handle = int(sys.argv[1])
 
 _addon = xbmcaddon.Addon()
 _session = requests.Session()
-_profile = xbmc.translatePath( _addon.getAddonInfo('profile'))
+_profile = translatePath( _addon.getAddonInfo('profile'))
 try:
     _profile = _profile.decode('utf-8')
 except:
